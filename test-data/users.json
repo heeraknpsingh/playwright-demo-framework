@@ -1,0 +1,13 @@
+{
+  "roles": {
+    "standard": {
+      "description": "Standard registered user — credentials loaded from .env"
+    }
+  },
+  "errorMessages": {
+    "loginFailed": "Login was unsuccessful. Please correct the errors and try again.",
+    "emailRequired": "Please enter your email",
+    "passwordRequired": "Please enter your password",
+    "invalidCredentials": "The credentials provided are incorrect"
+  }
+}

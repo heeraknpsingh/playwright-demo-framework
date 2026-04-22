@@ -1,0 +1,30 @@
+# ── Dependencies ──────────────────────────────────────────────────────────────
+node_modules/
+
+# ── Build output ──────────────────────────────────────────────────────────────
+dist/
+*.tsbuildinfo
+
+# ── Environment — never commit credentials ────────────────────────────────────
+.env
+
+# ── Playwright & test runtime output ──────────────────────────────────────────
+reports/
+test-results/
+playwright-report/
+
+# ── OS artefacts ──────────────────────────────────────────────────────────────
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# ── IDE / editor tooling ──────────────────────────────────────────────────────
+.claude/
+.qodo/
+.idea/
+.vscode/
+
+# ── Large media files ─────────────────────────────────────────────────────────
+*.mov
+*.mp4
+*.webm
