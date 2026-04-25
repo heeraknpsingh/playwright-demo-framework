@@ -11,10 +11,11 @@
     "test:headed": "playwright test --headed",
     "test:session": "playwright test --grep @session",
     "test:a11y": "playwright test --grep @a11y",
-    "test:performance": "playwright test --grep @performance --project=performance",
+    "test:performance": "playwright test --project=performance",
     "test:debug": "playwright test --debug",
     "report": "playwright show-report reports/html",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test:all": "playwright test"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.2",

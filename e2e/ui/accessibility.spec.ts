@@ -1,4 +1,8 @@
 import { test, expect } from "../../fixtures/base.fixture";
+import type {
+  PageImageAltResult,
+  PageHeadingResult,
+} from "../../helpers/accessibility.helper";
 
 test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
   // ─── Full-page axe-core scans ──────────────────────────────────────────────
@@ -163,6 +167,7 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
   test("[TC_032] — Login form is fully navigable by keyboard in correct tab order", async ({
     page,
     loginPage,
+    a11yHelper,
     logger,
   }, testInfo) => {
     await loginPage.navigateToLogin();
@@ -192,19 +197,11 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
     const emailIndex = tabSequence.indexOf("Email");
     const passwordIndex = tabSequence.indexOf("Password");
 
-    const report = [
-      "=== TC_032: Login Form Keyboard Navigation ===",
-      "",
-      `Initial focus on page load : id="${initialFocus}"`,
-      `Full tab sequence          : ${tabSequence.join(" → ")}`,
-      "",
-      `Email in sequence          : ${emailIndex !== -1} (position ${emailIndex})`,
-      `Password in sequence       : ${passwordIndex !== -1} (position ${passwordIndex})`,
-      `Email before Password      : ${emailIndex < passwordIndex}`,
-    ].join("\n");
-
     await testInfo.attach("keyboard-tab-order-report", {
-      body: report,
+      body: a11yHelper.formatKeyboardNavReport(
+        { initialFocus, tabSequence, emailIndex, passwordIndex },
+        "TC_032: Login Form Keyboard Navigation",
+      ),
       contentType: "text/plain",
     });
 
@@ -238,6 +235,7 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
   test("[TC_033] — Login error message is announced to assistive technology", async ({
     page,
     loginPage,
+    a11yHelper,
     logger,
   }, testInfo) => {
     await loginPage.navigateToLogin();
@@ -280,26 +278,11 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
     const isProperlyAnnounced =
       errorRole?.role === "alert" || !!errorRole?.ariaLive;
 
-    const report = [
-      "=== TC_033: Login Error Message Accessibility ===",
-      "",
-      `Error visible                : ${isErrorVisible}`,
-      `Element found                : ${!!errorRole}`,
-      `Selector                     : ${errorRole?.selector ?? "n/a"}`,
-      `role attribute               : ${errorRole?.role ?? "(none)"}`,
-      `aria-live attribute          : ${errorRole?.ariaLive ?? "(none)"}`,
-      `aria-atomic attribute        : ${errorRole?.ariaAtomic ?? "(none)"}`,
-      `Error text                   : ${errorRole?.text ?? "(not found)"}`,
-      "",
-      isProperlyAnnounced
-        ? "VERDICT: PASS — error is announced via role=alert or aria-live."
-        : "VERDICT: FINDING — error container lacks role=alert / aria-live.\n" +
-          "         Screen readers will not automatically announce this message.\n" +
-          '         Recommended fix: add role="alert" to the error container.',
-    ].join("\n");
-
     await testInfo.attach("error-accessibility-report", {
-      body: report,
+      body: a11yHelper.formatAriaAnnouncementReport(
+        { isErrorVisible, errorRole, isProperlyAnnounced },
+        "TC_033: Login Error Message Accessibility",
+      ),
       contentType: "text/plain",
     });
 
@@ -339,6 +322,7 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
   test("[TC_034] — Interactive elements display a visible focus indicator", async ({
     page,
     loginPage,
+    a11yHelper,
     logger,
   }, testInfo) => {
     await loginPage.navigateToLogin();
@@ -398,17 +382,11 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
       );
     }
 
-    const report = [
-      "=== TC_034: Focus Indicator Visibility ===",
-      "",
-      ...results.map(
-        (r) =>
-          `  ${r.label.padEnd(20)} outline: ${r.outlineStyle} ${r.outlineWidth} → ${r.visible ? "VISIBLE ✓" : "NOT VISIBLE ✗"}`,
-      ),
-    ].join("\n");
-
     await testInfo.attach("focus-indicator-report", {
-      body: report,
+      body: a11yHelper.formatFocusIndicatorReport(
+        results,
+        "TC_034: Focus Indicator Visibility",
+      ),
       contentType: "text/plain",
     });
 
@@ -436,6 +414,7 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
     page,
     loginPage,
     homePage,
+    a11yHelper,
     logger,
   }, testInfo) => {
     const pagesToCheck = [
@@ -443,11 +422,7 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
       { label: "Home page", navigate: () => homePage.navigateToHome() },
     ];
 
-    const allFindings: string[] = ["=== TC_035: Image Alt Text ===", ""];
-    // Only hard-assert on the login page — it is the primary feature under test.
-    // The home page finding is documented as informational because it stems from
-    // the CMS template (product images rendered by the shop engine).
-    let loginPageMissing = 0;
+    const pageResults: PageImageAltResult[] = [];
 
     for (const { label, navigate } of pagesToCheck) {
       await navigate();
@@ -462,32 +437,17 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
       );
 
       const missing = imageData.filter((img) => !img.hasAlt);
-      const empty = imageData.filter((img) => img.hasAlt && img.alt === "");
-      const described = imageData.filter((img) => img.hasAlt && img.alt !== "");
-
-      allFindings.push(`${label}:`);
-      allFindings.push(`  Total images       : ${imageData.length}`);
-      allFindings.push(`  With alt text      : ${described.length}`);
-      allFindings.push(`  Decorative (alt=""): ${empty.length}`);
-      allFindings.push(
-        `  Missing alt        : ${missing.length}${missing.length && label === "Home page" ? "  (CMS template — documented, not asserted)" : ""}`,
-      );
-
-      if (missing.length) {
-        allFindings.push(
-          `  Affected images    : ${missing.map((i) => i.src).join(", ")}`,
-        );
-        if (label === "Login page") loginPageMissing += missing.length;
-      }
-      allFindings.push("");
-
       logger.info(
         `${label} — images: ${imageData.length}, missing alt: ${missing.length}`,
       );
+      // Only hard-assert on the login page — it is the primary feature under test.
+      // The home page finding is documented as informational because it stems from
+      // the CMS template (product images rendered by the shop engine).
+      pageResults.push({ label, imageData, isHomePage: label === "Home page" });
     }
 
     await testInfo.attach("image-alt-text-report", {
-      body: allFindings.join("\n"),
+      body: a11yHelper.formatImageAltReport(pageResults, "TC_035: Image Alt Text"),
       contentType: "text/plain",
     });
 
@@ -496,6 +456,10 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
       body: screenshot,
       contentType: "image/png",
     });
+
+    const loginResult = pageResults.find((r) => r.label === "Login page");
+    const loginPageMissing =
+      loginResult?.imageData.filter((img) => !img.hasAlt).length ?? 0;
 
     expect(
       loginPageMissing,
@@ -513,6 +477,7 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
     page,
     loginPage,
     homePage,
+    a11yHelper,
     logger,
   }, testInfo) => {
     const pagesToCheck = [
@@ -520,20 +485,19 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
       { label: "Home page", navigate: () => homePage.navigateToHome() },
     ];
 
-    const allFindings: string[] = ["=== TC_036: Heading Hierarchy ===", ""];
-    // Assert on the login page (the primary feature under test).
-    // The home page uses the CMS template which is known to omit h1 — documented as a finding.
-    let loginPagePass = true;
+    const pageResults: PageHeadingResult[] = [];
 
     for (const { label, navigate } of pagesToCheck) {
       await navigate();
       logger.info(`Checking heading hierarchy on ${label}`);
 
       const headings = await page.evaluate(() =>
-        Array.from(document.querySelectorAll("h1,h2,h3,h4,h5,h6")).map((h) => ({
-          level: parseInt(h.tagName[1]),
-          text: h.textContent?.trim().substring(0, 80) ?? "",
-        })),
+        Array.from(document.querySelectorAll("h1,h2,h3,h4,h5,h6")).map(
+          (h) => ({
+            level: parseInt(h.tagName[1]),
+            text: h.textContent?.trim().substring(0, 80) ?? "",
+          }),
+        ),
       );
 
       const h1Count = headings.filter((h) => h.level === 1).length;
@@ -550,31 +514,27 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
       }
 
       const pagePass = h1Count === 1 && skippedLevels.length === 0;
-      if (label === "Login page" && !pagePass) loginPagePass = false;
-
-      const isHomePage = label === "Home page";
-      allFindings.push(
-        `${label}:${isHomePage && !pagePass ? "  (CMS template — documented, not asserted)" : ""}`,
-      );
-      allFindings.push(`  Total headings : ${headings.length}`);
-      allFindings.push(
-        `  h1 count       : ${h1Count} ${h1Count === 1 ? "✓" : "(should be exactly 1) ✗"}`,
-      );
-      allFindings.push(
-        `  Skipped levels : ${skippedLevels.length === 0 ? "none ✓" : skippedLevels.join("; ")}`,
-      );
-      allFindings.push(
-        `  Heading order  : ${headings.map((h) => `h${h.level}`).join(" → ")}`,
-      );
-      allFindings.push("");
 
       logger.info(
         `${label} — h1 count: ${h1Count}, skipped levels: ${skippedLevels.length}`,
       );
+      // Assert on the login page (the primary feature under test).
+      // The home page uses the CMS template which is known to omit h1 — documented as a finding.
+      pageResults.push({
+        label,
+        headings,
+        h1Count,
+        skippedLevels,
+        pagePass,
+        isHomePage: label === "Home page",
+      });
     }
 
     await testInfo.attach("heading-hierarchy-report", {
-      body: allFindings.join("\n"),
+      body: a11yHelper.formatHeadingHierarchyReport(
+        pageResults,
+        "TC_036: Heading Hierarchy",
+      ),
       contentType: "text/plain",
     });
 
@@ -583,6 +543,9 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
       body: screenshot,
       contentType: "image/png",
     });
+
+    const loginPagePass =
+      pageResults.find((r) => r.label === "Login page")?.pagePass ?? true;
 
     expect(
       loginPagePass,
@@ -622,22 +585,12 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
       `Colour contrast — total violations: ${contrastViolations.length}, failures: ${contrastFailures.length}`,
     );
 
-    const report = [
-      "=== TC_037: Colour Contrast Compliance ===",
-      "",
-      `Total contrast violations : ${contrastViolations.length}`,
-      `Failures (serious+)       : ${contrastFailures.length}`,
-      "",
-      contrastViolations.length
-        ? a11yHelper.formatViolations(
-            contrastViolations,
-            "Colour Contrast Violations",
-          )
-        : "No colour contrast violations found.",
-    ].join("\n");
-
     await testInfo.attach("colour-contrast-report", {
-      body: report,
+      body: a11yHelper.formatColourContrastReport(
+        contrastViolations,
+        contrastFailures,
+        "TC_037: Colour Contrast Compliance",
+      ),
       contentType: "text/plain",
     });
 

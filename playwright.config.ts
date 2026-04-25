@@ -30,19 +30,21 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
+      // Exclude @performance so those tests only run under the performance
+      // project which has the required CDP remote-debugging-port arg.
+      grepInvert: /@performance/,
       use: { ...devices["Desktop Chrome"] },
     },
     {
       name: "performance",
+      // Only pick up @performance-tagged tests in this project.
+      grep: /@performance/,
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1280, height: 720 },
-        // Remote debugging port required by playwright-lighthouse to connect
-        // Lighthouse to the running Chromium instance via CDP.
         launchOptions: {
           args: [
             "--remote-debugging-port=9222",
-            // Needed for headless Chromium in Linux CI environments.
             "--no-sandbox",
             "--disable-setuid-sandbox",
           ],

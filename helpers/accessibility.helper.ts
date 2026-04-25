@@ -5,6 +5,60 @@ import { Logger } from "../utils/logger";
 
 export type ImpactLevel = "critical" | "serious" | "moderate" | "minor";
 
+export interface KeyboardNavReportData {
+  initialFocus: string;
+  tabSequence: string[];
+  emailIndex: number;
+  passwordIndex: number;
+}
+
+export interface AriaElementInfo {
+  selector: string;
+  role: string | null;
+  ariaLive: string | null;
+  ariaAtomic: string | null;
+  text: string | undefined;
+}
+
+export interface AriaAnnouncementReportData {
+  isErrorVisible: boolean;
+  errorRole: AriaElementInfo | null;
+  isProperlyAnnounced: boolean;
+}
+
+export interface FocusIndicatorResult {
+  label: string;
+  outlineStyle: string;
+  outlineWidth: string;
+  visible: boolean;
+}
+
+export interface ImageData {
+  src: string;
+  alt: string | null;
+  hasAlt: boolean;
+}
+
+export interface PageImageAltResult {
+  label: string;
+  imageData: ImageData[];
+  isHomePage?: boolean;
+}
+
+export interface HeadingInfo {
+  level: number;
+  text: string;
+}
+
+export interface PageHeadingResult {
+  label: string;
+  headings: HeadingInfo[];
+  h1Count: number;
+  skippedLevels: string[];
+  pagePass: boolean;
+  isHomePage?: boolean;
+}
+
 export interface A11yScanOptions {
   /** CSS selector to scope the scan to a specific component. Scans the full page when omitted. */
   include?: string;
@@ -213,6 +267,131 @@ export class AccessibilityHelper {
     }
 
     return lines.join("\n");
+  }
+
+  formatKeyboardNavReport(data: KeyboardNavReportData, title: string): string {
+    return [
+      `=== ${title} ===`,
+      `Initial focus on page load : id="${data.initialFocus}"`,
+      `Full tab sequence          : ${data.tabSequence.join(" → ")}`,
+      `Email in sequence          : ${data.emailIndex !== -1} (position ${data.emailIndex})`,
+      `Password in sequence       : ${data.passwordIndex !== -1} (position ${data.passwordIndex})`,
+      `Email before Password      : ${data.emailIndex < data.passwordIndex}`,
+    ].join("\n");
+  }
+
+  formatAriaAnnouncementReport(
+    data: AriaAnnouncementReportData,
+    title: string,
+  ): string {
+    const { isErrorVisible, errorRole, isProperlyAnnounced } = data;
+    return [
+      `=== ${title} ===`,
+      "",
+      `Error visible                : ${isErrorVisible}`,
+      `Element found                : ${!!errorRole}`,
+      `Selector                     : ${errorRole?.selector ?? "n/a"}`,
+      `role attribute               : ${errorRole?.role ?? "(none)"}`,
+      `aria-live attribute          : ${errorRole?.ariaLive ?? "(none)"}`,
+      `aria-atomic attribute        : ${errorRole?.ariaAtomic ?? "(none)"}`,
+      `Error text                   : ${errorRole?.text ?? "(not found)"}`,
+      "",
+      isProperlyAnnounced
+        ? "VERDICT: PASS — error is announced via role=alert or aria-live."
+        : "VERDICT: FINDING — error container lacks role=alert / aria-live.\n" +
+          "         Screen readers will not automatically announce this message.\n" +
+          '         Recommended fix: add role="alert" to the error container.',
+    ].join("\n");
+  }
+
+  formatFocusIndicatorReport(
+    results: FocusIndicatorResult[],
+    title: string,
+  ): string {
+    return [
+      `=== ${title} ===`,
+      "",
+      ...results.map(
+        (r) =>
+          `  ${r.label.padEnd(20)} outline: ${r.outlineStyle} ${r.outlineWidth} → ${r.visible ? "VISIBLE ✓" : "NOT VISIBLE ✗"}`,
+      ),
+    ].join("\n");
+  }
+
+  formatImageAltReport(pages: PageImageAltResult[], title: string): string {
+    const lines: string[] = [`=== ${title} ===`, ""];
+    for (const { label, imageData, isHomePage } of pages) {
+      const missing = imageData.filter((img) => !img.hasAlt);
+      const empty = imageData.filter((img) => img.hasAlt && img.alt === "");
+      const described = imageData.filter(
+        (img) => img.hasAlt && img.alt !== "",
+      );
+      lines.push(`${label}:`);
+      lines.push(`  Total images       : ${imageData.length}`);
+      lines.push(`  With alt text      : ${described.length}`);
+      lines.push(`  Decorative (alt=""): ${empty.length}`);
+      lines.push(
+        `  Missing alt        : ${missing.length}${missing.length && isHomePage ? "  (CMS template — documented, not asserted)" : ""}`,
+      );
+      if (missing.length) {
+        lines.push(
+          `  Affected images    : ${missing.map((i) => i.src).join(", ")}`,
+        );
+      }
+      lines.push("");
+    }
+    return lines.join("\n");
+  }
+
+  formatHeadingHierarchyReport(
+    pages: PageHeadingResult[],
+    title: string,
+  ): string {
+    const lines: string[] = [`=== ${title} ===`, ""];
+    for (const {
+      label,
+      headings,
+      h1Count,
+      skippedLevels,
+      pagePass,
+      isHomePage,
+    } of pages) {
+      lines.push(
+        `${label}:${isHomePage && !pagePass ? "  (CMS template — documented, not asserted)" : ""}`,
+      );
+      lines.push(`  Total headings : ${headings.length}`);
+      lines.push(
+        `  h1 count       : ${h1Count} ${h1Count === 1 ? "✓" : "(should be exactly 1) ✗"}`,
+      );
+      lines.push(
+        `  Skipped levels : ${skippedLevels.length === 0 ? "none ✓" : skippedLevels.join("; ")}`,
+      );
+      lines.push(
+        `  Heading order  : ${headings.map((h) => `h${h.level}`).join(" → ")}`,
+      );
+      lines.push("");
+    }
+    return lines.join("\n");
+  }
+
+  formatColourContrastReport(
+    contrastViolations: Result[],
+    contrastFailures: Result[],
+    title: string,
+  ): string {
+    return [
+      `=== ${title} ===`,
+      "",
+      `Total contrast violations : ${contrastViolations.length}`,
+      `Failures (serious+)       : ${contrastFailures.length}`,
+      "",
+      contrastViolations.length
+        ? this.formatViolations(
+            contrastViolations,
+            "Colour Contrast Violations",
+          )
+        : "No colour contrast violations found.",
+    ].join("\n");
   }
 
   private summariseNode(node: NodeResult): string {
