@@ -3,6 +3,8 @@ import { LoginPage } from "../page-objects/LoginPage";
 import { HomePage } from "../page-objects/HomePage";
 import { ApiHelper } from "../helpers/api.helper";
 import { SecurityHelper } from "../helpers/security.helper";
+import { AccessibilityHelper } from "../helpers/accessibility.helper";
+import { LighthouseHelper } from "../helpers/lighthouse.helper";
 import { createLogger, Logger } from "../utils/logger";
 import { envConfig, EnvConfig } from "../utils/env.loader";
 
@@ -12,6 +14,8 @@ export type BaseFixtures = {
   homePage: HomePage;
   apiHelper: ApiHelper;
   securityHelper: SecurityHelper;
+  a11yHelper: AccessibilityHelper;
+  lighthouseHelper: LighthouseHelper;
   testUser: { email: string; password: string };
   env: EnvConfig;
   captureOnFailure: void;
@@ -58,6 +62,14 @@ export const test = base.extend<BaseFixtures>({
 
   securityHelper: async ({ logger }, use) => {
     await use(new SecurityHelper(logger));
+  },
+
+  a11yHelper: async ({ logger }, use) => {
+    await use(new AccessibilityHelper(logger));
+  },
+
+  lighthouseHelper: async ({ logger }, use) => {
+    await use(new LighthouseHelper(logger));
   },
 
   /**

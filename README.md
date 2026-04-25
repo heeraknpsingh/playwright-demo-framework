@@ -28,6 +28,7 @@ A production-grade UI + API automation framework for [demowebshop.tricentis.com]
 |---|---|
 | [Playwright](https://playwright.dev) | Browser automation & API testing |
 | [TypeScript](https://www.typescriptlang.org) | Type-safe test code |
+| [axe-core / @axe-core/playwright](https://github.com/dequelabs/axe-core-npm) | WCAG 2.1 AA accessibility scanning |
 | [Winston](https://github.com/winstonjs/winston) | Structured logging |
 | [dotenv](https://github.com/motdotla/dotenv) | Environment variable management |
 
@@ -49,7 +50,8 @@ playwright-demo-framework/
 │   │   ├── login.spec.ts              # Login UI tests           (TC_005–TC_009)
 │   │   ├── defensive-security.spec.ts # Security detection tests (TC_010–TC_014)
 │   │   ├── xss-input-validation.spec.ts # XSS / input tests     (TC_015–TC_023)
-│   │   └── session-management.spec.ts # Session security tests   (TC_024–TC_028)
+│   │   ├── session-management.spec.ts # Session security tests   (TC_024–TC_028)
+│   │   └── accessibility.spec.ts      # WCAG 2.1 AA a11y tests  (TC_029–TC_037)
 │   └── api/
 │       └── login-api.spec.ts          # Login API tests          (TC_001–TC_004)
 │
@@ -68,7 +70,8 @@ playwright-demo-framework/
 │   ├── api.helper.ts                  # API request wrapper with auth management
 │   ├── security.helper.ts             # CAPTCHA / MFA / rate-limit detection
 │   ├── wait.helper.ts                 # Custom wait strategies
-│   └── xss.helper.ts                  # XSS observation & reporting
+│   ├── xss.helper.ts                  # XSS observation & reporting
+│   └── accessibility.helper.ts        # axe-core wrapper, violation formatting
 │
 ├── utils/                             # Framework utilities
 │   ├── logger.ts                      # Winston logger (file + console)
@@ -159,11 +162,12 @@ SLOW_MO=0
 npm test
 
 # Run by tag
-npm run test:ui        # @ui  — Login UI tests
-npm run test:api       # @api — Login API tests
+npm run test:ui        # @ui       — Login UI tests
+npm run test:api       # @api      — Login API tests
 npm run test:security  # @security — Defensive security detection
-npm run test:xss       # @xss — XSS input validation
-npm run test:session   # @session — Session management
+npm run test:xss       # @xss      — XSS input validation
+npm run test:session   # @session  — Session management
+npm run test:a11y      # @a11y     — Accessibility (WCAG 2.1 AA)
 
 # Run with browser visible
 npm run test:headed
@@ -231,6 +235,27 @@ Tests submit 40+ payloads across 6 categories (script injection, HTML injection,
 | TC_021 | Long input (10,000 chars) does not destabilise the server |
 | TC_022 | Malformed and control-character inputs are handled safely |
 | TC_023 | Browser-side XSS observation — critical payloads (dialogs, DOM, console, network) |
+
+### Accessibility — `@a11y` (TC_029–TC_037)
+
+Tests use **axe-core** (`@axe-core/playwright`) for automated WCAG 2.1 AA scanning, supplemented by targeted keyboard, focus, and structural checks. Critical and serious violations fail the test; moderate and minor violations are documented as warnings in the attached report.
+
+| ID | Test |
+|---|---|
+| TC_029 | Login page — full WCAG 2.1 AA axe-core scan (unauthenticated) |
+| TC_030 | Home page — full WCAG 2.1 AA axe-core scan (unauthenticated) |
+| TC_031 | Home page — full WCAG 2.1 AA axe-core scan (authenticated, dynamic content included) |
+| TC_032 | Login form — keyboard Tab order reaches Email → Password → Login button in sequence |
+| TC_033 | Login error message — present in DOM and announced via `role="alert"` or `aria-live`; error state page has no new critical/serious violations |
+| TC_034 | Login form — every interactive element displays a visible focus indicator when focused via keyboard |
+| TC_035 | All images on login and home pages have an `alt` attribute; decorative images use `alt=""` |
+| TC_036 | Heading hierarchy is logical (no skipped levels, exactly one `h1` per page) |
+| TC_037 | Text colour contrast meets WCAG 2.1 AA requirements (axe `color-contrast` rule) |
+
+Each test attaches to the Playwright HTML report:
+- Plain-text violation summary (failures / warnings split)
+- Full axe-core JSON output for integration with dashboards or CI tooling
+- Page screenshot at scan time
 
 ### Session Management — `@session` (TC_024–TC_028)
 
@@ -415,6 +440,18 @@ The following assumptions were made when designing and implementing this framewo
 
 10. **Network conditions are normal.** Tests do not simulate slow networks, offline mode, or packet loss.
 
+### Accessibility Tests (TC_029–TC_037)
+
+14. **WCAG 2.1 AA is the target standard.** axe-core is configured with the `wcag2a`, `wcag2aa`, and `wcag21aa` tag sets. WCAG 2.2 and AAA criteria are out of scope.
+
+15. **Critical and serious violations fail; moderate and minor are documented.** This threshold is intentional — it surfaces must-fix issues without blocking on warnings that may require design decisions. The `failOn` level can be tightened to `"moderate"` for stricter enforcement.
+
+16. **Third-party widgets are excluded.** reCAPTCHA, hCaptcha, Doubleclick, and Google iframes are excluded from axe scans because they are outside the application's control and frequently contain known violations.
+
+17. **axe-core is not an exhaustive audit.** Automated scanning catches approximately 30–40 % of WCAG issues. The targeted tests (TC_032–TC_036) supplement automation with checks that axe cannot perform reliably (keyboard focus order, focus ring visibility, actual tab behaviour). A full accessibility audit would also require manual testing with a screen reader (e.g. VoiceOver, NVDA).
+
+18. **Focus ring detection is CSS-computed.** TC_034 reads `outline-style` and `outline-width` from the computed style at focus time. Browsers that implement `:focus-visible` differently may report `outline: none` even when a ring is visible via `box-shadow`. The test currently checks `outline` only; `box-shadow`-based rings are not counted as passing.
+
 ### Security Tests (TC_010–TC_014, TC_024–TC_028)
 
 11. **Defensive-testing philosophy.** Security detection tests (TC_010–TC_014) and session observation tests (TC_024, TC_026) observe and document the application's security posture rather than asserting it must pass or fail. A finding is reported through attached reports and log warnings, not a hard test failure. This approach prevents false CI failures when testing against a demo application with known limitations.
@@ -466,6 +503,10 @@ The following assumptions were made when designing and implementing this framewo
 
 12. **No mobile or responsive testing.**
     The viewport is fixed at 1280×720. Mobile viewports and responsive layout breakpoints are not tested.
+
+14. **Accessibility tests target the live demo app — violations reflect its actual posture.** demowebshop.tricentis.com may have pre-existing colour contrast or landmark violations that are outside this framework's control. Failing tests document real issues in the target application.
+
+15. **axe-core automated coverage is partial.** Automated rules cover approximately 30–40 % of WCAG 2.1 AA criteria. Screen-reader testing (VoiceOver, NVDA) and manual keyboard walkthroughs are required for a comprehensive audit.
 
 13. **Session tests require the `browser` fixture — not available in API-only contexts.**
     TC_024, TC_026, and TC_027 use `browser.newContext()` to create isolated browser sessions. This requires a full browser process and cannot be run in Playwright's API-only (`request`) mode.

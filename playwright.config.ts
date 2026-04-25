@@ -32,6 +32,23 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
+    {
+      name: "performance",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 1280, height: 720 },
+        // Remote debugging port required by playwright-lighthouse to connect
+        // Lighthouse to the running Chromium instance via CDP.
+        launchOptions: {
+          args: [
+            "--remote-debugging-port=9222",
+            // Needed for headless Chromium in Linux CI environments.
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+          ],
+        },
+      },
+    },
   ],
   outputDir: "test-results/",
 });
