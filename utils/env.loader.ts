@@ -22,7 +22,7 @@ function requireEnv(key: string): string {
 
 export function loadEnvConfig(): EnvConfig {
   return {
-    baseUrl: requireEnv('BASE_URL'),
+    baseUrl: process.env.BASE_URL || 'https://demowebshop.tricentis.com',
     userEmail: requireEnv('USER_EMAIL'),
     userPassword: requireEnv('USER_PASSWORD'),
     headless: process.env.HEADLESS !== 'false',
