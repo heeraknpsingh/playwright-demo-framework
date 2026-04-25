@@ -20,7 +20,10 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
     logger.info("Running axe-core scan on login page");
 
     const result = await a11yHelper.scan(page);
-    const summary = a11yHelper.formatSummary(result, "Login Page (unauthenticated)");
+    const summary = a11yHelper.formatSummary(
+      result,
+      "Login Page (unauthenticated)",
+    );
 
     await testInfo.attach("a11y-login-page-report", {
       body: summary,
@@ -38,7 +41,9 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
     });
 
     if (result.warnings.length) {
-      logger.warn(`${result.warnings.length} moderate/minor warning(s) — see attached report`);
+      logger.warn(
+        `${result.warnings.length} moderate/minor warning(s) — see attached report`,
+      );
     }
 
     expect(
@@ -62,7 +67,10 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
     logger.info("Running axe-core scan on home page (unauthenticated)");
 
     const result = await a11yHelper.scan(page);
-    const summary = a11yHelper.formatSummary(result, "Home Page (unauthenticated)");
+    const summary = a11yHelper.formatSummary(
+      result,
+      "Home Page (unauthenticated)",
+    );
 
     await testInfo.attach("a11y-home-page-report", {
       body: summary,
@@ -80,7 +88,9 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
     });
 
     if (result.warnings.length) {
-      logger.warn(`${result.warnings.length} moderate/minor warning(s) — see attached report`);
+      logger.warn(
+        `${result.warnings.length} moderate/minor warning(s) — see attached report`,
+      );
     }
 
     expect(
@@ -110,7 +120,10 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
 
     await homePage.navigateToHome();
     const result = await a11yHelper.scan(page);
-    const summary = a11yHelper.formatSummary(result, "Home Page (authenticated)");
+    const summary = a11yHelper.formatSummary(
+      result,
+      "Home Page (authenticated)",
+    );
 
     await testInfo.attach("a11y-home-authenticated-report", {
       body: summary,
@@ -128,7 +141,9 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
     });
 
     if (result.warnings.length) {
-      logger.warn(`${result.warnings.length} moderate/minor warning(s) — see attached report`);
+      logger.warn(
+        `${result.warnings.length} moderate/minor warning(s) — see attached report`,
+      );
     }
 
     expect(
@@ -154,19 +169,25 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
     logger.info("Testing keyboard tab order on login form");
 
     // Capture the element that receives focus on page load (autofocus or first focusable).
-    const initialFocus = await page.evaluate(() => document.activeElement?.id ?? "");
+    const initialFocus = await page.evaluate(
+      () => document.activeElement?.id ?? "",
+    );
 
     // Tab through up to 12 focusable elements, collecting every element ID reached.
     // Stops early if focus wraps back to the starting element.
     const tabSequence: string[] = [initialFocus];
     for (let i = 0; i < 12; i++) {
       await page.keyboard.press("Tab");
-      const focused = await page.evaluate(() => document.activeElement?.id ?? "");
+      const focused = await page.evaluate(
+        () => document.activeElement?.id ?? "",
+      );
       if (focused === initialFocus) break; // focus wrapped — full cycle complete
       tabSequence.push(focused);
     }
 
-    logger.info(`Full tab sequence (${tabSequence.length} stops): ${tabSequence.join(" → ")}`);
+    logger.info(
+      `Full tab sequence (${tabSequence.length} stops): ${tabSequence.join(" → ")}`,
+    );
 
     const emailIndex = tabSequence.indexOf("Email");
     const passwordIndex = tabSequence.indexOf("Password");
@@ -193,11 +214,18 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
       contentType: "image/png",
     });
 
-    expect(tabSequence, "Email field must be reachable via keyboard Tab").toContain("Email");
-    expect(tabSequence, "Password field must be reachable via keyboard Tab").toContain("Password");
-    expect(emailIndex, "Email must be focused before Password in tab order").toBeLessThan(
-      passwordIndex,
-    );
+    expect(
+      tabSequence,
+      "Email field must be reachable via keyboard Tab",
+    ).toContain("Email");
+    expect(
+      tabSequence,
+      "Password field must be reachable via keyboard Tab",
+    ).toContain("Password");
+    expect(
+      emailIndex,
+      "Email must be focused before Password in tab order",
+    ).toBeLessThan(passwordIndex);
   });
 
   /**
@@ -214,10 +242,15 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
   }, testInfo) => {
     await loginPage.navigateToLogin();
     await loginPage.login("invalid@example.com", "WrongPassword1!");
-    logger.info("Submitted invalid credentials — checking error message accessibility");
+    logger.info(
+      "Submitted invalid credentials — checking error message accessibility",
+    );
 
     const isErrorVisible = await loginPage.isErrorVisible();
-    expect(isErrorVisible, "Error message must be visible after failed login").toBeTruthy();
+    expect(
+      isErrorVisible,
+      "Error message must be visible after failed login",
+    ).toBeTruthy();
 
     // Check whether the error container has an accessible announcement role
     const errorRole = await page.evaluate(() => {
@@ -225,7 +258,7 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
         ".validation-summary-errors",
         ".field-validation-error",
         '[role="alert"]',
-        '[aria-live]',
+        "[aria-live]",
       ];
       for (const sel of selectors) {
         const el = document.querySelector(sel);
@@ -244,7 +277,8 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
 
     logger.info("Error element ARIA attributes", { errorRole });
 
-    const isProperlyAnnounced = errorRole?.role === "alert" || !!errorRole?.ariaLive;
+    const isProperlyAnnounced =
+      errorRole?.role === "alert" || !!errorRole?.ariaLive;
 
     const report = [
       "=== TC_033: Login Error Message Accessibility ===",
@@ -261,7 +295,7 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
         ? "VERDICT: PASS — error is announced via role=alert or aria-live."
         : "VERDICT: FINDING — error container lacks role=alert / aria-live.\n" +
           "         Screen readers will not automatically announce this message.\n" +
-          "         Recommended fix: add role=\"alert\" to the error container.",
+          '         Recommended fix: add role="alert" to the error container.',
     ].join("\n");
 
     await testInfo.attach("error-accessibility-report", {
@@ -276,16 +310,23 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
     });
 
     if (isProperlyAnnounced) {
-      logger.info("TC_033 PASS: error message has proper ARIA announcement attributes");
+      logger.info(
+        "TC_033 PASS: error message has proper ARIA announcement attributes",
+      );
     } else {
-      logger.warn("TC_033 FINDING: error container missing role=alert / aria-live — screen readers will not announce it");
+      logger.warn(
+        "TC_033 FINDING: error container missing role=alert / aria-live — screen readers will not announce it",
+      );
     }
 
     // Primary assertion: the error message must be visible after failed login.
     // ARIA announcement quality is documented above — it is an observation of the app's
     // accessibility posture, not a hard enforcement, to match the defensive-testing pattern
     // used across this framework for third-party demo application findings.
-    expect(isErrorVisible, "Error message must be visible after failed login").toBeTruthy();
+    expect(
+      isErrorVisible,
+      "Error message must be visible after failed login",
+    ).toBeTruthy();
   });
 
   /**
@@ -309,7 +350,12 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
       { selector: 'input[value="Log in"]', label: "Login button" },
     ];
 
-    const results: { label: string; outlineStyle: string; outlineWidth: string; visible: boolean }[] = [];
+    const results: {
+      label: string;
+      outlineStyle: string;
+      outlineWidth: string;
+      visible: boolean;
+    }[] = [];
 
     for (const item of focusableSelectors) {
       const locator = item.id
@@ -318,19 +364,22 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
 
       await locator.focus();
 
-      const styles = await page.evaluate((sel) => {
-        const el = sel.startsWith("#")
-          ? document.querySelector(sel)
-          : document.querySelector(sel);
-        if (!el) return null;
-        const computed = window.getComputedStyle(el);
-        return {
-          outlineStyle: computed.outlineStyle,
-          outlineWidth: computed.outlineWidth,
-          outlineColor: computed.outlineColor,
-          boxShadow: computed.boxShadow,
-        };
-      }, item.id ? `#${item.id}` : item.selector!);
+      const styles = await page.evaluate(
+        (sel) => {
+          const el = sel.startsWith("#")
+            ? document.querySelector(sel)
+            : document.querySelector(sel);
+          if (!el) return null;
+          const computed = window.getComputedStyle(el);
+          return {
+            outlineStyle: computed.outlineStyle,
+            outlineWidth: computed.outlineWidth,
+            outlineColor: computed.outlineColor,
+            boxShadow: computed.boxShadow,
+          };
+        },
+        item.id ? `#${item.id}` : item.selector!,
+      );
 
       const hasFocusRing =
         styles !== null &&
@@ -344,7 +393,9 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
         visible: hasFocusRing,
       });
 
-      logger.info(`Focus ring — ${item.label}: outline=${styles?.outlineStyle} ${styles?.outlineWidth}`);
+      logger.info(
+        `Focus ring — ${item.label}: outline=${styles?.outlineStyle} ${styles?.outlineWidth}`,
+      );
     }
 
     const report = [
@@ -368,7 +419,10 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
     });
 
     for (const r of results) {
-      expect(r.visible, `${r.label} must have a visible focus indicator`).toBeTruthy();
+      expect(
+        r.visible,
+        `${r.label} must have a visible focus indicator`,
+      ).toBeTruthy();
     }
   });
 
@@ -420,12 +474,16 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
       );
 
       if (missing.length) {
-        allFindings.push(`  Affected images    : ${missing.map((i) => i.src).join(", ")}`);
+        allFindings.push(
+          `  Affected images    : ${missing.map((i) => i.src).join(", ")}`,
+        );
         if (label === "Login page") loginPageMissing += missing.length;
       }
       allFindings.push("");
 
-      logger.info(`${label} — images: ${imageData.length}, missing alt: ${missing.length}`);
+      logger.info(
+        `${label} — images: ${imageData.length}, missing alt: ${missing.length}`,
+      );
     }
 
     await testInfo.attach("image-alt-text-report", {
@@ -434,7 +492,10 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
     });
 
     const screenshot = await page.screenshot({ fullPage: true });
-    await testInfo.attach("image-alt-screenshot", { body: screenshot, contentType: "image/png" });
+    await testInfo.attach("image-alt-screenshot", {
+      body: screenshot,
+      contentType: "image/png",
+    });
 
     expect(
       loginPageMissing,
@@ -482,7 +543,9 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
         const prev = headings[i - 1].level;
         const curr = headings[i].level;
         if (curr > prev + 1) {
-          skippedLevels.push(`h${prev} → h${curr} ("${headings[i].text.substring(0, 40)}")`);
+          skippedLevels.push(
+            `h${prev} → h${curr} ("${headings[i].text.substring(0, 40)}")`,
+          );
         }
       }
 
@@ -490,14 +553,24 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
       if (label === "Login page" && !pagePass) loginPagePass = false;
 
       const isHomePage = label === "Home page";
-      allFindings.push(`${label}:${isHomePage && !pagePass ? "  (CMS template — documented, not asserted)" : ""}`);
+      allFindings.push(
+        `${label}:${isHomePage && !pagePass ? "  (CMS template — documented, not asserted)" : ""}`,
+      );
       allFindings.push(`  Total headings : ${headings.length}`);
-      allFindings.push(`  h1 count       : ${h1Count} ${h1Count === 1 ? "✓" : "(should be exactly 1) ✗"}`);
-      allFindings.push(`  Skipped levels : ${skippedLevels.length === 0 ? "none ✓" : skippedLevels.join("; ")}`);
-      allFindings.push(`  Heading order  : ${headings.map((h) => `h${h.level}`).join(" → ")}`);
+      allFindings.push(
+        `  h1 count       : ${h1Count} ${h1Count === 1 ? "✓" : "(should be exactly 1) ✗"}`,
+      );
+      allFindings.push(
+        `  Skipped levels : ${skippedLevels.length === 0 ? "none ✓" : skippedLevels.join("; ")}`,
+      );
+      allFindings.push(
+        `  Heading order  : ${headings.map((h) => `h${h.level}`).join(" → ")}`,
+      );
       allFindings.push("");
 
-      logger.info(`${label} — h1 count: ${h1Count}, skipped levels: ${skippedLevels.length}`);
+      logger.info(
+        `${label} — h1 count: ${h1Count}, skipped levels: ${skippedLevels.length}`,
+      );
     }
 
     await testInfo.attach("heading-hierarchy-report", {
@@ -511,7 +584,10 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
       contentType: "image/png",
     });
 
-    expect(loginPagePass, "Login page heading hierarchy must be valid — see attached report").toBeTruthy();
+    expect(
+      loginPagePass,
+      "Login page heading hierarchy must be valid — see attached report",
+    ).toBeTruthy();
   });
 
   /**
@@ -535,10 +611,16 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
     });
 
     // Filter to contrast violations only
-    const contrastViolations = result.violations.filter((v) => v.id === "color-contrast");
-    const contrastFailures = result.failures.filter((v) => v.id === "color-contrast");
+    const contrastViolations = result.violations.filter(
+      (v) => v.id === "color-contrast",
+    );
+    const contrastFailures = result.failures.filter(
+      (v) => v.id === "color-contrast",
+    );
 
-    logger.info(`Colour contrast — total violations: ${contrastViolations.length}, failures: ${contrastFailures.length}`);
+    logger.info(
+      `Colour contrast — total violations: ${contrastViolations.length}, failures: ${contrastFailures.length}`,
+    );
 
     const report = [
       "=== TC_037: Colour Contrast Compliance ===",
@@ -547,7 +629,10 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
       `Failures (serious+)       : ${contrastFailures.length}`,
       "",
       contrastViolations.length
-        ? a11yHelper.formatViolations(contrastViolations, "Colour Contrast Violations")
+        ? a11yHelper.formatViolations(
+            contrastViolations,
+            "Colour Contrast Violations",
+          )
         : "No colour contrast violations found.",
     ].join("\n");
 

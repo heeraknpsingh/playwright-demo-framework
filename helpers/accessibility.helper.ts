@@ -29,7 +29,12 @@ export interface A11yScanResult {
   raw: AxeResults;
 }
 
-const IMPACT_ORDER: ImpactLevel[] = ["minor", "moderate", "serious", "critical"];
+const IMPACT_ORDER: ImpactLevel[] = [
+  "minor",
+  "moderate",
+  "serious",
+  "critical",
+];
 
 const DEFAULT_TAGS = ["wcag2a", "wcag2aa", "wcag21aa"];
 
@@ -73,7 +78,10 @@ export class AccessibilityHelper {
    * Runs an axe-core scan on the full page or a scoped component.
    * Returns structured results split into failures (above threshold) and warnings.
    */
-  async scan(page: Page, options: A11yScanOptions = {}): Promise<A11yScanResult> {
+  async scan(
+    page: Page,
+    options: A11yScanOptions = {},
+  ): Promise<A11yScanResult> {
     const {
       include,
       exclude = [],
@@ -108,10 +116,14 @@ export class AccessibilityHelper {
 
     const failOnIndex = IMPACT_ORDER.indexOf(failOn);
     const failures = raw.violations.filter(
-      (v) => v.impact && IMPACT_ORDER.indexOf(v.impact as ImpactLevel) >= failOnIndex,
+      (v) =>
+        v.impact &&
+        IMPACT_ORDER.indexOf(v.impact as ImpactLevel) >= failOnIndex,
     );
     const warnings = raw.violations.filter(
-      (v) => !v.impact || IMPACT_ORDER.indexOf(v.impact as ImpactLevel) < failOnIndex,
+      (v) =>
+        !v.impact ||
+        IMPACT_ORDER.indexOf(v.impact as ImpactLevel) < failOnIndex,
     );
 
     this.logger.info(
@@ -122,7 +134,11 @@ export class AccessibilityHelper {
 
     if (failures.length) {
       this.logger.warn(`${failures.length} accessibility failure(s) found`, {
-        failures: failures.map((f) => ({ id: f.id, impact: f.impact, description: f.description })),
+        failures: failures.map((f) => ({
+          id: f.id,
+          impact: f.impact,
+          description: f.description,
+        })),
       });
     }
 
@@ -142,7 +158,10 @@ export class AccessibilityHelper {
   }
 
   /** Formats a violation list into a human-readable plain-text report for test attachments. */
-  formatViolations(violations: Result[], heading = "Accessibility Violations"): string {
+  formatViolations(
+    violations: Result[],
+    heading = "Accessibility Violations",
+  ): string {
     if (!violations.length) {
       return `${heading}\n${"─".repeat(40)}\nNo violations found.\n`;
     }
@@ -150,7 +169,9 @@ export class AccessibilityHelper {
     const lines: string[] = [`${heading}`, "─".repeat(60), ""];
 
     for (const [i, v] of violations.entries()) {
-      lines.push(`[${i + 1}] ${v.id} — ${v.impact?.toUpperCase() ?? "UNKNOWN"}`);
+      lines.push(
+        `[${i + 1}] ${v.id} — ${v.impact?.toUpperCase() ?? "UNKNOWN"}`,
+      );
       lines.push(`    Description : ${v.description}`);
       lines.push(`    Help        : ${v.helpUrl}`);
       lines.push(`    Nodes       : ${v.nodes.length}`);
@@ -180,11 +201,15 @@ export class AccessibilityHelper {
     ];
 
     if (result.failures.length) {
-      lines.push(this.formatViolations(result.failures, "FAILURES (critical / serious)"));
+      lines.push(
+        this.formatViolations(result.failures, "FAILURES (critical / serious)"),
+      );
     }
 
     if (result.warnings.length) {
-      lines.push(this.formatViolations(result.warnings, "WARNINGS (moderate / minor)"));
+      lines.push(
+        this.formatViolations(result.warnings, "WARNINGS (moderate / minor)"),
+      );
     }
 
     return lines.join("\n");
