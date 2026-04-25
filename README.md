@@ -15,6 +15,7 @@ A production-grade UI + API automation framework for [demowebshop.tricentis.com]
 - [Test Coverage](#test-coverage)
 - [Reporting](#reporting)
 - [Logging](#logging)
+- [CI/CD](#cicd)
 - [Writing New Tests](#writing-new-tests)
 - [Framework Architecture](#framework-architecture)
 - [Assumptions](#assumptions)
@@ -29,6 +30,7 @@ A production-grade UI + API automation framework for [demowebshop.tricentis.com]
 | [Playwright](https://playwright.dev) | Browser automation & API testing |
 | [TypeScript](https://www.typescriptlang.org) | Type-safe test code |
 | [axe-core / @axe-core/playwright](https://github.com/dequelabs/axe-core-npm) | WCAG 2.1 AA accessibility scanning |
+| [lighthouse](https://github.com/GoogleChrome/lighthouse) | Client-side performance auditing via Chrome DevTools Protocol |
 | [Winston](https://github.com/winstonjs/winston) | Structured logging |
 | [dotenv](https://github.com/motdotla/dotenv) | Environment variable management |
 
@@ -51,7 +53,8 @@ playwright-demo-framework/
 │   │   ├── defensive-security.spec.ts # Security detection tests (TC_010–TC_014)
 │   │   ├── xss-input-validation.spec.ts # XSS / input tests     (TC_015–TC_023)
 │   │   ├── session-management.spec.ts # Session security tests   (TC_024–TC_028)
-│   │   └── accessibility.spec.ts      # WCAG 2.1 AA a11y tests  (TC_029–TC_037)
+│   │   ├── accessibility.spec.ts      # WCAG 2.1 AA a11y tests  (TC_029–TC_037)
+│   │   └── performance.spec.ts        # Lighthouse perf audits  (TC_PERF_001–004)
 │   └── api/
 │       └── login-api.spec.ts          # Login API tests          (TC_001–TC_004)
 │
@@ -71,7 +74,8 @@ playwright-demo-framework/
 │   ├── security.helper.ts             # CAPTCHA / MFA / rate-limit detection
 │   ├── wait.helper.ts                 # Custom wait strategies
 │   ├── xss.helper.ts                  # XSS observation & reporting
-│   └── accessibility.helper.ts        # axe-core wrapper, violation formatting
+│   ├── accessibility.helper.ts        # axe-core wrapper, violation formatting
+│   └── lighthouse.helper.ts           # Lighthouse audit runner, threshold assertion, report attachment
 │
 ├── utils/                             # Framework utilities
 │   ├── logger.ts                      # Winston logger (file + console)
@@ -81,10 +85,16 @@ playwright-demo-framework/
 ├── test-data/                         # Test data
 │   ├── login.data.ts                  # Typed login test data
 │   ├── xss-payloads.data.ts           # 40+ categorised XSS payloads
+│   ├── performance.data.ts            # Lighthouse budget thresholds and page configs
 │   └── users.json                     # Static config
 │
+├── .github/
+│   └── workflows/
+│       └── performance.yml            # GitHub Actions — Lighthouse CI job
+│
 └── reports/                           # Auto-generated output
-    ├── html/                          # Playwright HTML report
+    ├── html/                          # Playwright HTML report (all projects merged)
+    ├── lighthouse/                    # Lighthouse HTML + JSON reports per page per run
     ├── logs/                          # Winston log files (one per day)
     ├── screenshots/                   # Evidence screenshots
     └── results.json                   # JSON results for CI integration
@@ -167,7 +177,11 @@ npm run test:api       # @api      — Login API tests
 npm run test:security  # @security — Defensive security detection
 npm run test:xss       # @xss      — XSS input validation
 npm run test:session   # @session  — Session management
-npm run test:a11y      # @a11y     — Accessibility (WCAG 2.1 AA)
+npm run test:a11y        # @a11y        — Accessibility (WCAG 2.1 AA)
+npm run test:performance # @performance — Lighthouse client-side performance audits
+
+# Run everything (all tags, all projects) in a single Playwright process
+npm run test:all
 
 # Run with browser visible
 npm run test:headed
@@ -236,6 +250,40 @@ Tests submit 40+ payloads across 6 categories (script injection, HTML injection,
 | TC_022 | Malformed and control-character inputs are handled safely |
 | TC_023 | Browser-side XSS observation — critical payloads (dialogs, DOM, console, network) |
 
+### Performance — `@performance` (TC_PERF_001–TC_PERF_004)
+
+Lighthouse audits run via the `lighthouse` npm package connected directly to Playwright's Chromium instance over the Chrome DevTools Protocol (CDP). Each test navigates to the target page, runs a full Lighthouse audit, and enforces the score budgets below. Budget violations fail the test and block CI.
+
+**Score budgets**
+
+| Category | Threshold | What it measures |
+|---|---|---|
+| Performance | ≥ 50 | Core Web Vitals: FCP, LCP, TBT, CLS, Speed Index, TTI |
+| Accessibility | ≥ 70 | Missing labels, heading order, ARIA attributes, colour contrast |
+| Best Practices | ≥ 80 | Vulnerable JS libraries, HTTPS, browser errors |
+| SEO | ≥ 40 | Meta descriptions, crawlable links, indexing directives |
+
+**Tests**
+
+| ID | Page | Auth required |
+|---|---|---|
+| TC_PERF_001 | Home (`/`) | No |
+| TC_PERF_002 | Login (`/login`) | No |
+| TC_PERF_003 | Account / profile (`/customer/info`) | Yes — logs in via `LoginPage` fixture |
+| TC_PERF_004 | Order history (`/customer/orders`) | Yes — logs in via `LoginPage` fixture |
+
+Each test attaches the full Lighthouse HTML report to the Playwright HTML report (visible per-test under the **Attachments** tab) and saves both `.html` and `.json` files to `reports/lighthouse/`.
+
+**How it works under the hood**
+
+Lighthouse connects to Chrome via CDP on port `9222`. The `performance` Playwright project launches Chromium with `--remote-debugging-port=9222`. The `LighthouseHelper.runAudit()` method:
+
+1. Calls `lighthouse(url, { port: 9222, disableStorageReset: true, ... })` — `disableStorageReset` preserves the session so authenticated pages stay accessible during the audit.
+2. Saves `report[0]` (HTML) and `report[1]` (JSON) to `reports/lighthouse/<name>-<timestamp>.*`.
+3. Reads each category's `score` (0–1 scale, multiplied by 100) and throws if any falls below the configured threshold.
+
+---
+
 ### Accessibility — `@a11y` (TC_029–TC_037)
 
 Tests use **axe-core** (`@axe-core/playwright`) for automated WCAG 2.1 AA scanning, supplemented by targeted keyboard, focus, and structural checks. Critical and serious violations fail the test; moderate and minor violations are documented as warnings in the attached report.
@@ -283,6 +331,8 @@ npm run report
 | **HTML** | `reports/html/` | Interactive pass/fail view with screenshots, videos, traces, and all test attachments |
 | **JSON** | `reports/results.json` | Machine-readable results for CI integration |
 | **Winston logs** | `reports/logs/YYYY-MM-DD.log` | Structured per-test logs with timestamps and metadata |
+| **Lighthouse HTML** | `reports/lighthouse/<name>-<ts>.html` | Full Lighthouse report for each audited page — open in any browser |
+| **Lighthouse JSON** | `reports/lighthouse/<name>-<ts>.json` | Raw Lighthouse result object — category scores, all audit details |
 
 Tests attach additional evidence to the HTML report:
 
@@ -292,6 +342,44 @@ Tests attach additional evidence to the HTML report:
 - **Screenshots** — captured at key steps and always on failure
 - **Page HTML source** — attached on failure for DOM inspection
 - **Videos / traces** — retained on failure for step-by-step replay
+
+Lighthouse reports are also attached directly to the Playwright HTML report under the **Attachments** tab of each `TC_PERF_*` test.
+
+---
+
+## CI/CD
+
+The framework ships with a GitHub Actions workflow at [`.github/workflows/performance.yml`](.github/workflows/performance.yml) that runs the Lighthouse performance suite on every push and pull request to `main`.
+
+### Workflow steps
+
+1. **Checkout** — checks out the repository
+2. **Setup Node 20** — with `npm` cache
+3. **`npm ci`** — clean dependency install
+4. **`npx playwright install chromium --with-deps`** — installs the browser and OS-level dependencies
+5. **`npm run test:performance`** — runs all `@performance` tests under the `performance` Playwright project
+6. **Upload artifacts** — Lighthouse reports (`reports/lighthouse/`) and Playwright HTML report (`reports/html/`) are retained for 30 days
+
+### Required GitHub secrets
+
+| Secret | Description |
+|---|---|
+| `USER_EMAIL` | Login email for the test user account |
+| `USER_PASSWORD` | Login password for the test user account |
+
+`BASE_URL` is hardcoded to `https://demowebshop.tricentis.com` in the workflow (public URL, not a secret). Add secrets at **Settings → Secrets and variables → Actions**.
+
+### Trigger conditions
+
+```yaml
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+```
+
+Performance budgets are enforced as hard gates — if any Lighthouse score drops below the threshold, the job fails and the PR cannot be merged until the regression is fixed or the budget is adjusted in [`test-data/performance.data.ts`](test-data/performance.data.ts).
 
 ---
 
@@ -391,6 +479,7 @@ base.fixture.ts          ← custom `test` object used by all specs
     ├── homePage          ← HomePage instance
     ├── apiHelper         ← ApiHelper instance
     ├── securityHelper    ← SecurityHelper instance
+    ├── lighthouseHelper  ← LighthouseHelper instance (performance project only)
     └── captureOnFailure  ← auto-fixture: screenshot + HTML on failure
             │
             ▼
@@ -439,6 +528,16 @@ The following assumptions were made when designing and implementing this framewo
 9. **No CI-managed state.** There is no `storageState` file shared between tests. Each test performs a fresh login where authentication is required.
 
 10. **Network conditions are normal.** Tests do not simulate slow networks, offline mode, or packet loss.
+
+### Performance Tests (TC_PERF_001–TC_PERF_004)
+
+19. **Budgets reflect the demo app's measured baseline.** Thresholds are set ~5 points below the observed scores for `demowebshop.tricentis.com`. Their purpose is catching regressions, not enforcing absolute quality bars on a third-party demo app.
+
+20. **Single-worker execution prevents CDP port conflicts.** Lighthouse connects to Chrome on port `9222`. Because `workers: 1` is enforced globally, only one browser instance is active at a time, ensuring the port is always free.
+
+21. **`disableStorageReset: true` is required for authenticated audits.** Without this flag, Lighthouse clears all cookies before running its audit, logging the user out before the page is measured. The flag preserves the Playwright-established session.
+
+22. **Lighthouse scores are non-deterministic across runs.** Network conditions, server response times, and CPU throttling simulation mean scores can vary by ±5 points between runs on the same page. Thresholds are set with enough headroom to absorb this variance.
 
 ### Accessibility Tests (TC_029–TC_037)
 
@@ -507,6 +606,12 @@ The following assumptions were made when designing and implementing this framewo
 14. **Accessibility tests target the live demo app — violations reflect its actual posture.** demowebshop.tricentis.com may have pre-existing colour contrast or landmark violations that are outside this framework's control. Failing tests document real issues in the target application.
 
 15. **axe-core automated coverage is partial.** Automated rules cover approximately 30–40 % of WCAG 2.1 AA criteria. Screen-reader testing (VoiceOver, NVDA) and manual keyboard walkthroughs are required for a comprehensive audit.
+
+16. **Lighthouse scores are not stable enough for pixel-perfect budget enforcement.** Score variance of ±5 points is normal across runs due to CPU simulation, network jitter, and server response variability. Budgets in `test-data/performance.data.ts` should sit at least 5 points below the observed baseline to avoid flaky failures.
+
+17. **Lighthouse audits add ~15 seconds per page.** Each `playAudit` call opens a new CDP session and runs a full trace. The performance suite adds approximately 1 minute to the total CI run time. This is expected and acceptable for a left-shift approach.
+
+18. **`reports/lighthouse/` accumulates files across runs.** HTML and JSON report files are named with a timestamp and never overwritten. Old reports should be cleaned up periodically or the directory should be excluded from long-term storage.
 
 13. **Session tests require the `browser` fixture — not available in API-only contexts.**
     TC_024, TC_026, and TC_027 use `browser.newContext()` to create isolated browser sessions. This requires a full browser process and cannot be run in Playwright's API-only (`request`) mode.
