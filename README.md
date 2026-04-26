@@ -15,6 +15,7 @@ A production-grade UI + API automation framework for [demowebshop.tricentis.com]
 - [Test Coverage](#test-coverage)
 - [Reporting](#reporting)
 - [Logging](#logging)
+- [Code Quality](#code-quality)
 - [CI/CD](#cicd)
 - [Writing New Tests](#writing-new-tests)
 - [Framework Architecture](#framework-architecture)
@@ -33,6 +34,10 @@ A production-grade UI + API automation framework for [demowebshop.tricentis.com]
 | [lighthouse](https://github.com/GoogleChrome/lighthouse) | Client-side performance auditing via Chrome DevTools Protocol |
 | [Winston](https://github.com/winstonjs/winston) | Structured logging |
 | [dotenv](https://github.com/motdotla/dotenv) | Environment variable management |
+| [ESLint](https://eslint.org) + [@typescript-eslint](https://typescript-eslint.io) + [eslint-plugin-playwright](https://github.com/playwright-community/eslint-plugin-playwright) | Static analysis — TypeScript correctness and Playwright best practices |
+| [Prettier](https://prettier.io) | Opinionated code formatting |
+| [Husky](https://typicode.github.io/husky) + [lint-staged](https://github.com/okonet/lint-staged) | Git hooks — pre-commit and pre-push quality gates |
+| [Claude](https://claude.ai) (`claude-sonnet-4-6`) | AI-powered code review on every commit and push |
 
 ---
 
@@ -120,6 +125,7 @@ playwright-demo-framework/
 
 - Node.js 18+
 - npm 9+
+- Git 2.9+ (required for Husky hooks)
 
 ### Install
 
@@ -128,7 +134,7 @@ playwright-demo-framework/
 git clone <repo-url>
 cd playwright-demo-framework
 
-# 2. Install dependencies
+# 2. Install dependencies (also installs and activates Husky git hooks automatically)
 npm install
 
 # 3. Install Playwright browsers
@@ -138,6 +144,8 @@ npx playwright install
 cp .env.example .env
 # Edit .env with your credentials
 ```
+
+> **Husky hooks are activated automatically by `npm install`** via the `"prepare": "husky"` script in `package.json`. No extra steps are needed. The hooks live in `.husky/` and are committed to the repository so every developer gets them on clone.
 
 ---
 
@@ -152,6 +160,7 @@ USER_PASSWORD=YourPassword123@
 HEADLESS=true
 LOG_LEVEL=debug
 SLOW_MO=0
+ANTHROPIC_API_KEY=your-anthropic-api-key   # optional — see Code Quality section
 ```
 
 | Variable | Description | Default |
@@ -162,6 +171,7 @@ SLOW_MO=0
 | `HEADLESS` | Run browsers headlessly | `true` |
 | `LOG_LEVEL` | Winston log level (`debug`, `info`, `warn`, `error`) | `debug` |
 | `SLOW_MO` | Milliseconds to slow down each browser action (useful for debugging) | `0` |
+| `ANTHROPIC_API_KEY` | Anthropic API key for AI code review — if omitted and Claude Code CLI is installed, the CLI session is used instead | — |
 
 ---
 
@@ -344,6 +354,286 @@ Tests attach additional evidence to the HTML report:
 - **Videos / traces** — retained on failure for step-by-step replay
 
 Lighthouse reports are also attached directly to the Playwright HTML report under the **Attachments** tab of each `TC-PERF_*` test.
+
+---
+
+## Code Quality
+
+Every `git commit` and `git push` automatically runs a three-stage quality pipeline. The pipeline is powered by [Husky](https://typicode.github.io/husky) git hooks and requires no manual steps — it activates the moment you run `git commit` or `git push`.
+
+### What runs and when
+
+```
+git commit
+│
+├── [1/3] ESLint + Prettier    ← staged files only, auto-fixes what it can
+├── [2/3] Coding Standards     ← staged .ts files only, custom rule checker
+└── [3/3] AI Code Review       ← staged diff reviewed by Claude
+
+git push
+│
+└── AI Code Review             ← full branch diff vs main reviewed by Claude
+```
+
+Each stage must pass before the next runs. A failure prints exactly what needs fixing — the commit or push is blocked until you resolve it, re-stage your files, and retry.
+
+---
+
+### Installation — what you need
+
+Everything is installed automatically by `npm install`. There is nothing extra to install manually.
+
+| What | How it gets set up |
+|---|---|
+| ESLint, Prettier, lint-staged | Installed as `devDependencies` via `npm install` |
+| Husky git hooks | Activated by the `"prepare": "husky"` script that runs automatically after `npm install` |
+| Coding standards checker | Already in [`scripts/code-quality/`](scripts/code-quality/) — runs via `ts-node` (included in dependencies) |
+| AI reviewer (Claude API mode) | Add `ANTHROPIC_API_KEY` to your `.env` — no install required |
+| AI reviewer (Claude Code CLI mode) | Install [Claude Code](https://claude.ai/code) and log in — the hook detects it automatically |
+
+After cloning, `npm install` is the only command needed to activate all hooks on your machine.
+
+> **Verify hooks are active:**
+> ```bash
+> cat .husky/pre-commit   # should show the 3-step pipeline
+> cat .husky/pre-push     # should show the AI review on push
+> ```
+
+---
+
+### How the pre-commit hook works
+
+**Hook file:** [`.husky/pre-commit`](.husky/pre-commit)
+
+When you run `git commit`, Git calls this hook before creating the commit object. The hook runs three checks in sequence:
+
+```
+╔══════════════════════════════════════════════════════════╗
+║              PRE-COMMIT QUALITY CHECKS                  ║
+╚══════════════════════════════════════════════════════════╝
+
+  [1/3] Running ESLint + Prettier...
+  [2/3] Running coding standards checker...
+  [3/3] Running AI code review...
+
+╔══════════════════════════════════════════════════════════╗
+║           ✓  ALL PRE-COMMIT CHECKS PASSED               ║
+╚══════════════════════════════════════════════════════════╝
+```
+
+If any step fails, the hook exits with a non-zero code — Git cancels the commit and your working tree is left exactly as it was. Fix the reported issues, re-stage (`git add`), and re-run `git commit`.
+
+---
+
+### How the pre-push hook works
+
+**Hook file:** [`.husky/pre-push`](.husky/pre-push)
+
+When you run `git push`, Git calls this hook before sending anything to the remote. It runs a single AI review on the **full branch diff** (all commits on your branch vs `main`), not just the last staged change.
+
+This catches issues that look fine in isolation but are problematic in the context of everything on the branch — for example, a test added in one commit that contradicts a helper changed in another.
+
+If the review fails, the push is blocked. Fix the reported issues, commit the fix, and push again.
+
+---
+
+### Stage 1 — ESLint + Prettier
+
+**Tool:** ESLint + Prettier, run via [lint-staged](https://github.com/okonet/lint-staged)  
+**Config:** [`.eslintrc.json`](.eslintrc.json) · [`.lintstagedrc.json`](.lintstagedrc.json)  
+**Scope:** staged files only — files you have not changed are never touched
+
+lint-staged passes only the staged files to each tool, grouped by glob:
+
+```
+e2e/**/*.ts          → eslint --fix  →  prettier --write
+helpers/**/*.ts      → eslint --fix  →  prettier --write
+page-objects/**/*.ts → eslint --fix  →  prettier --write
+utils/**/*.ts        → eslint --fix  →  prettier --write
+fixtures/**/*.ts     → eslint --fix  →  prettier --write
+*.json               →                  prettier --write
+```
+
+`--fix` auto-corrects anything ESLint can fix automatically (unused imports, simple style issues). `prettier --write` reformats the file. Both changes are applied directly to the file — if you open the file after a failed commit attempt you will see the auto-corrections.
+
+**Key ESLint rules:**
+
+| Rule | Severity | What it catches |
+|---|---|---|
+| `no-console` | error | Raw `console.log` — use the Winston logger instead |
+| `@typescript-eslint/no-explicit-any` | warning | Untyped `any` — prefer proper types |
+| `@typescript-eslint/explicit-function-return-type` | warning | Missing return type annotations |
+| `@typescript-eslint/no-unused-vars` | error | Declared but unused variables (args starting with `_` are exempt) |
+| `@typescript-eslint/no-floating-promises` | error | Unawaited `async` calls — add `await` or `void` |
+| `playwright/prefer-web-first-assertions` | error | `expect(await locator.count())` → use `expect(locator).toHaveCount()` |
+| `playwright/expect-expect` | error | Tests that contain no `expect()` calls |
+| `playwright/no-wait-for-timeout` | warning | Hardcoded `waitForTimeout` sleeps — use web-first waits |
+| `playwright/no-force-option` | warning | `{ force: true }` — masks real interaction problems |
+| `playwright/no-skipped-test` | warning | `test.skip` left in committed code |
+
+Errors block the commit. Warnings are reported but non-blocking (zero-warning policy is enforced for staged files).
+
+---
+
+### Stage 2 — Coding Standards Checker
+
+**Tool:** Custom TypeScript script  
+**Script:** [`scripts/code-quality/standards-checker.ts`](scripts/code-quality/standards-checker.ts)  
+**Scope:** staged `.ts` files only
+
+This checker enforces framework conventions that ESLint cannot express — things like test ID format, fixture usage, and evidence capture requirements. It reads each staged file line-by-line and applies the rules below.
+
+| Rule | Severity | What it checks |
+|---|---|---|
+| **TC-001** — Test ID format | error | Every `test()` title must open with `[TC-XXX]` or `[TC-XXX_NNN]` |
+| **TC-005** — Describe tag | error | `test.describe()` must include a recognised tag: `@ui`, `@api`, `@security`, `@xss`, `@session`, `@a11y`, `@performance` |
+| **TC-006** — No hardcoded credentials | error | Email addresses or passwords as string literals — use the `testUser` fixture instead. Exception: emails containing `invalid` (e.g. `invalid@example.com`) in negative tests are allowed |
+| **TC-007** — No hardcoded URLs | warning | Inline `https://` strings — use `envConfig.baseUrl` so the target can be changed via `.env` |
+| **TC-008** — Evidence capture on negative tests | warning | Tests whose title contains `invalid`, `error`, `fail`, `wrong`, or `incorrect` must call `captureEvidence()` within the test body |
+| **TC-PO-001** — Page object contract | error | Page object classes (in `page-objects/`) must implement both `navigateTo()` and `waitForPageLoad()` |
+
+**Errors block the commit. Warnings are printed but do not block.**
+
+Example output when a violation is found:
+
+```
+Standards Check — 3 file(s) scanned
+
+WARNINGS:
+  ⚠  e2e/ui/login.spec.ts:55  [TC-008]  Negative test ('test("[TC-007] — Invalid password...') must call captureEvidence() and attach screenshot
+
+ERRORS (blocking):
+  ✗  e2e/ui/login.spec.ts:12  [TC-001]  Test title does not match [TC-XXX] format — found: 'Valid login'
+
+STANDARDS FAILED — fix 1 error(s) above
+```
+
+Run it manually on any file:
+
+```bash
+npm run standards:check e2e/ui/login.spec.ts
+```
+
+---
+
+### Stage 3 — AI Code Review
+
+**Tool:** Claude `claude-sonnet-4-6`  
+**Script:** [`scripts/code-quality/ai-reviewer.ts`](scripts/code-quality/ai-reviewer.ts)  
+**On commit:** reviews the staged diff  
+**On push:** reviews the full branch diff vs `main`
+
+The reviewer sends the git diff to Claude together with `docs/coding-standards.md` and `.eslintrc.json` as context. Claude reviews it the way a senior engineer would review a pull request — looking at logic, naming, test quality, missing assertions, flaky test risks, and standards compliance — and returns a structured response.
+
+**Output sections:**
+
+| Section | Blocking? | Description |
+|---|---|---|
+| **SUMMARY** | No | 2–4 sentence overall assessment of what the change does and its quality |
+| **ISSUES** | **Yes** | Clear violations — verdict becomes `fail` and the commit/push is stopped |
+| **SUGGESTIONS** | No | Actionable improvements with file and line references |
+| **REVIEW COMMENTS** | No | Inline comments on specific lines, written like a human reviewer |
+
+Example output:
+
+```
+════════════════════════════════════════════════════════════
+  AI CODE REVIEW  (claude-cli)
+════════════════════════════════════════════════════════════
+  Tokens used: 1842
+
+  SUMMARY
+  Adds captureEvidence() to TC-033 to satisfy the negative-test evidence
+  rule. Change is minimal and correct. One suggestion below.
+
+  SUGGESTIONS (non-blocking)
+  ⚠  e2e/ui/accessibility.spec.ts:289
+     Consider calling captureEvidence() before the final assertion so
+     the screenshot is captured even when the assertion fails.
+
+  REVIEW COMMENTS
+  ◆  e2e/ui/accessibility.spec.ts:242
+     Good fix. Replacing page.screenshot() with loginPage.captureEvidence()
+     routes through the page-object method (Rule 8) and ensures any future
+     framework hooks on evidence capture apply to this negative test.
+
+  ✓ AI REVIEW PASSED
+```
+
+#### Authentication — which token is used
+
+The script detects the available auth method automatically, in this priority order:
+
+```
+1. ANTHROPIC_API_KEY in .env   →  calls Claude API directly
+                                   (uses claude-sonnet-4-6, shows token count)
+
+2. claude CLI found on PATH    →  pipes diff to Claude Code CLI via stdin
+    (which claude succeeds)        (uses your logged-in Claude Code session)
+
+3. Neither available           →  prints "AI review skipped" and exits 0
+                                   (commit/push continues normally)
+```
+
+#### When the review is skipped (non-blocking scenarios)
+
+The AI review **never blocks a commit due to a tool problem** — only a real `"fail"` verdict (issues found in your code) stops the commit. In all the cases below, the commit proceeds with a skip message:
+
+| Situation | What you see | Commit proceeds? |
+|---|---|---|
+| No `ANTHROPIC_API_KEY` and no Claude Code CLI | `⚠ AI review skipped: No AI reviewer available` | ✅ Yes |
+| No TypeScript files in the diff | `⚠ AI review skipped: No TypeScript changes detected` | ✅ Yes |
+| Claude API unreachable / timeout | `⚠ AI review skipped: AI review error: ...` | ✅ Yes |
+| Claude response is not valid JSON | Review treated as `pass` with a parse-error suggestion | ✅ Yes |
+| `"fail"` verdict — issues found in your code | `✗ AI REVIEW FAILED — fix N issue(s) above` | ❌ Blocked |
+
+#### How it works on each machine
+
+| Developer's setup | What happens |
+|---|---|
+| `ANTHROPIC_API_KEY` in `.env` | Uses Claude API directly — works in any shell, including git hooks |
+| Claude Code CLI installed + logged in | Uses your Claude Code session — no extra config needed |
+| CI/CD (GitHub Actions, etc.) | Add `ANTHROPIC_API_KEY` as a repository secret and set it as an env var in the workflow |
+| Neither available | Review is silently skipped — all other checks still run |
+
+> **For teams:** Claude Code CLI mode means each developer's commits consume their own Claude quota. For a shared setup, add `ANTHROPIC_API_KEY` to each developer's `.env` (source it from your team's password manager — never commit it to the repo). Get an API key at [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys).
+
+---
+
+### Running checks manually
+
+You can run any stage independently without triggering a commit:
+
+```bash
+# ESLint — check all framework files
+npm run lint:eslint
+
+# Prettier — check formatting without writing
+npm run lint:prettier
+
+# TypeScript — type-check without emitting
+npm run lint
+
+# Coding standards checker — check specific files
+npm run standards:check e2e/ui/login.spec.ts page-objects/LoginPage.ts
+
+# AI reviewer — review staged changes (same as pre-commit)
+npm run ai:review
+
+# AI reviewer — review full branch diff vs main (same as pre-push)
+npx ts-node scripts/code-quality/ai-reviewer.ts --push
+```
+
+### Bypassing hooks (not recommended)
+
+If you ever need to skip the hooks temporarily (e.g. committing a work-in-progress draft):
+
+```bash
+git commit --no-verify -m "wip: draft"
+git push --no-verify
+```
+
+> Use sparingly. `--no-verify` skips all hooks including ESLint, standards, and AI review. Any issues will surface on the next proper commit or in CI.
 
 ---
 
