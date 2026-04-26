@@ -27,11 +27,43 @@ function checkTestIdFormat(filePath: string, lines: string[]): Violation[] {
   lines.forEach((line, i) => {
     const isTestCall = /^\s*test\s*\(/.test(line) && !line.includes("test.describe") && !line.includes("test.beforeEach") && !line.includes("test.afterEach") && !line.includes("test.skip") && !line.includes("test.only");
     if (isTestCall) {
-      const hasId = /\[TC_[A-Z0-9_]+\]/.test(line);
-      if (!hasId) {
-        violations.push(
-          violation(filePath, i + 1, "TC_001", `Test title is missing a [TC_XXX] ID prefix`, "error"),
-        );
+      const hasValidId = /["']\[TC_[A-Z0-9_]+\]/.test(line);   // complete: [TC_XXX]
+      const hasOpenBracket = /["']\[/.test(line);               // title starts with [
+      const hasTcStart = /["']\[TC_/.test(line);               // title starts with [TC_
+      const hasTcClosedBracket = /["']\[TC_[A-Z0-9_]+\]/.test(line); // [TC_XXX] closed
+
+      if (!hasValidId) {
+        if (!hasOpenBracket) {
+          violations.push(
+            violation(
+              filePath,
+              i + 1,
+              "TC_001",
+              `Test title must start with '[' — expected format: [TC_XXX] — description`,
+              "error",
+            ),
+          );
+        } else if (!hasTcStart) {
+          violations.push(
+            violation(
+              filePath,
+              i + 1,
+              "TC_001",
+              `Test ID must use 'TC_' prefix inside brackets — expected: [TC_XXX] (e.g. [TC_001])`,
+              "error",
+            ),
+          );
+        } else if (!hasTcClosedBracket) {
+          violations.push(
+            violation(
+              filePath,
+              i + 1,
+              "TC_001",
+              `Test ID bracket is not closed — expected ']' after the ID (e.g. [TC_001] not [TC_001)`,
+              "error",
+            ),
+          );
+        }
       }
     }
   });

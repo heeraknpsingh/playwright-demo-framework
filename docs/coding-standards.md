@@ -7,16 +7,31 @@ All contributors must follow these standards. Violations block commits.
 
 ## Rule 1 — Test ID Format
 
-Every `test()` title must begin with a bracketed ID in the format `[TC_XXX]` or `[TC_AI_XXX]`.
+Every `test()` title must follow this exact format: `[TC_XXX] — description`
 
-**Why:** Enables traceability between test cases and requirements. IDs are referenced in reports and CI output.
+Rules:
+- Title must **start** with `[` (opening bracket)
+- ID must use the prefix `TC_` immediately after `[`
+- ID must **end** with `]` (closing bracket)
+- Full pattern: `[TC_XXX]` where `XXX` is an alphanumeric identifier (e.g. `001`, `AI_001`)
+
+**Why:** Enables traceability between test cases and requirements. IDs are referenced in reports, CI output, and audit trails. Malformed IDs break report parsers and test filters.
 
 ```ts
 // CORRECT
 test("[TC_005] — Valid login with correct credentials", async () => { ... });
 test("[TC_AI_001] — Account info page loads for logged-in user", async () => { ... });
 
-// WRONG — no ID prefix
+// WRONG — no opening bracket
+test("TC_005 — Valid login with correct credentials", async () => { ... });
+
+// WRONG — missing TC_ prefix inside brackets
+test("[005] — Valid login with correct credentials", async () => { ... });
+
+// WRONG — bracket not closed
+test("[TC_005 — Valid login with correct credentials", async () => { ... });
+
+// WRONG — no ID at all
 test("Valid login with correct credentials", async () => { ... });
 ```
 
