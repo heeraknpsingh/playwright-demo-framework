@@ -18,10 +18,10 @@ test.describe("Defensive Security — Login", { tag: "@security" }, () => {
     await loginPage.navigateToLogin();
   });
 
-  // ─── TC_010: CAPTCHA / Bot-Protection Detection ────────────────────────────
+  // ─── TC-010: CAPTCHA / Bot-Protection Detection ────────────────────────────
 
   test(
-    "[TC_010] — Detect CAPTCHA or bot-protection on login page",
+    "[TC-010] — Detect CAPTCHA or bot-protection on login page",
     async ({ loginPage, logger }) => {
       logger.info("Test: scanning login page for CAPTCHA / bot-protection");
 
@@ -62,10 +62,10 @@ test.describe("Defensive Security — Login", { tag: "@security" }, () => {
     }
   );
 
-  // ─── TC_011: MFA / Two-Factor Authentication Detection ────────────────────
+  // ─── TC-011: MFA / Two-Factor Authentication Detection ────────────────────
 
   test(
-    "[TC_011] — Detect MFA challenge after valid login attempt",
+    "[TC-011] — Detect MFA challenge after valid login attempt",
     async ({ loginPage, logger, testUser }) => {
       logger.info("Test: checking for MFA challenge after valid credential login");
 
@@ -100,10 +100,10 @@ test.describe("Defensive Security — Login", { tag: "@security" }, () => {
     }
   );
 
-  // ─── TC_012: Rate Limiting After Repeated Failures ────────────────────────
+  // ─── TC-012: Rate Limiting After Repeated Failures ────────────────────────
 
   test(
-    "[TC_012] — Detect rate-limiting after repeated failed login attempts",
+    "[TC-012] — Detect rate-limiting after repeated failed login attempts",
     async ({ loginPage, logger }) => {
       logger.info(
         "Test: submitting 6 rapid failed logins to probe for rate-limiting"
@@ -170,10 +170,10 @@ test.describe("Defensive Security — Login", { tag: "@security" }, () => {
     }
   );
 
-  // ─── TC_013: Account Lockout Detection ────────────────────────────────────
+  // ─── TC-013: Account Lockout Detection ────────────────────────────────────
 
   test(
-    "[TC_013] — Detect account lockout after repeated invalid-password attempts",
+    "[TC-013] — Detect account lockout after repeated invalid-password attempts",
     async ({ loginPage, logger, testUser }) => {
       logger.info(
         "Test: submitting 5 invalid-password attempts to probe for account lockout"
@@ -251,10 +251,10 @@ test.describe("Defensive Security — Login", { tag: "@security" }, () => {
     }
   );
 
-  // ─── TC_014: Bot-Protection Header Detection (API) ────────────────────────
+  // ─── TC-014: Bot-Protection Header Detection (API) ────────────────────────
 
   test(
-    "[TC_014] — Detect bot-protection headers from rapid API login attempts",
+    "[TC-014] — Detect bot-protection headers from rapid API login attempts",
     async ({ apiHelper, securityHelper, logger }) => {
       logger.info(
         "Test: sending rapid API login requests and inspecting response headers for bot-protection signals"

@@ -13,7 +13,7 @@ import { performanceThresholds } from "../../test-data/performance.data";
  */
 
 test.describe("Non-Authenticated Performance @performance", () => {
-  test("TC_PERF_001: Home page meets performance budgets", async ({
+  test("[TC-PERF-001] — Home page meets performance budgets", async ({
     page,
     lighthouseHelper,
   }, testInfo) => {
@@ -24,7 +24,7 @@ test.describe("Non-Authenticated Performance @performance", () => {
     await lighthouseHelper.attachReportToTest(testInfo, "home");
   });
 
-  test("TC_PERF_002: Login page meets performance budgets", async ({
+  test("[TC-PERF-002] — Login page meets performance budgets", async ({
     page,
     lighthouseHelper,
   }, testInfo) => {
@@ -44,7 +44,7 @@ test.describe("Authenticated Performance @performance", () => {
     expect(loggedIn, "Login must succeed before performance audit").toBe(true);
   });
 
-  test("TC_PERF_003: Account/profile page meets performance budgets", async ({
+  test("[TC-PERF-003] — Account/profile page meets performance budgets", async ({
     page,
     lighthouseHelper,
   }, testInfo) => {
@@ -56,7 +56,7 @@ test.describe("Authenticated Performance @performance", () => {
     await lighthouseHelper.attachReportToTest(testInfo, "account");
   });
 
-  test("TC_PERF_004: Order history page meets performance budgets", async ({
+  test("[TC-PERF-004] — Order history page meets performance budgets", async ({
     page,
     lighthouseHelper,
   }, testInfo) => {

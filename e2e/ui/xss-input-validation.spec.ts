@@ -73,10 +73,10 @@ test.describe("XSS & Input Validation", { tag: "@xss" }, () => {
     xssHelper.detachListeners(page);
   });
 
-  // ─── TC_015: Script Injection ────────────────────────────────────────────────
+  // ─── TC-015: Script Injection ────────────────────────────────────────────────
 
   test(
-    "[TC_015] — Script injection in email field is blocked",
+    "[TC-015] — Script injection in email field is blocked",
     async ({ loginPage, logger, page }) => {
       logger.info("Test: script injection payloads in email field");
       const results: Array<{ payload: IXssPayload; obs: Awaited<ReturnType<typeof runXssEmailTest>> }> = [];
@@ -111,14 +111,14 @@ test.describe("XSS & Input Validation", { tag: "@xss" }, () => {
         body: batchReport,
         contentType: "text/plain",
       });
-      logger.info(`TC_015 complete — ${results.length} payloads tested`);
+      logger.info(`TC-015 complete — ${results.length} payloads tested`);
     },
   );
 
-  // ─── TC_016: HTML Injection ──────────────────────────────────────────────────
+  // ─── TC-016: HTML Injection ──────────────────────────────────────────────────
 
   test(
-    "[TC_016] — HTML tag injection in email field is blocked",
+    "[TC-016] — HTML tag injection in email field is blocked",
     async ({ loginPage, logger, page }) => {
       logger.info("Test: HTML injection payloads in email field");
       const results: Array<{ payload: IXssPayload; obs: Awaited<ReturnType<typeof runXssEmailTest>> }> = [];
@@ -147,14 +147,14 @@ test.describe("XSS & Input Validation", { tag: "@xss" }, () => {
         body: xssHelper.formatBatchReport(results),
         contentType: "text/plain",
       });
-      logger.info(`TC_016 complete — ${results.length} payloads tested`);
+      logger.info(`TC-016 complete — ${results.length} payloads tested`);
     },
   );
 
-  // ─── TC_017: Event Handler / JS URI Injection ────────────────────────────────
+  // ─── TC-017: Event Handler / JS URI Injection ────────────────────────────────
 
   test(
-    "[TC_017] — Event handler and javascript: URI injection is blocked",
+    "[TC-017] — Event handler and javascript: URI injection is blocked",
     async ({ loginPage, logger, page }) => {
       logger.info("Test: event handler / JS URI payloads in email field");
       const results: Array<{ payload: IXssPayload; obs: Awaited<ReturnType<typeof runXssEmailTest>> }> = [];
@@ -187,14 +187,14 @@ test.describe("XSS & Input Validation", { tag: "@xss" }, () => {
         body: xssHelper.formatBatchReport(results),
         contentType: "text/plain",
       });
-      logger.info(`TC_017 complete — ${results.length} payloads tested`);
+      logger.info(`TC-017 complete — ${results.length} payloads tested`);
     },
   );
 
-  // ─── TC_018: Special Characters ─────────────────────────────────────────────
+  // ─── TC-018: Special Characters ─────────────────────────────────────────────
 
   test(
-    "[TC_018] — Special characters are handled safely in email and password fields",
+    "[TC-018] — Special characters are handled safely in email and password fields",
     async ({ loginPage, logger, page }) => {
       logger.info("Test: special character payloads in email and password fields");
 
@@ -238,10 +238,10 @@ test.describe("XSS & Input Validation", { tag: "@xss" }, () => {
     },
   );
 
-  // ─── TC_019: SQL-Like Injection ──────────────────────────────────────────────
+  // ─── TC-019: SQL-Like Injection ──────────────────────────────────────────────
 
   test(
-    "[TC_019] — SQL-like injection does not grant unauthorised access",
+    "[TC-019] — SQL-like injection does not grant unauthorised access",
     async ({ loginPage, logger, page }) => {
       logger.info("Test: SQL injection patterns must not bypass authentication");
 
@@ -286,10 +286,10 @@ test.describe("XSS & Input Validation", { tag: "@xss" }, () => {
     },
   );
 
-  // ─── TC_020: Long Input (1 000 chars) ────────────────────────────────────────
+  // ─── TC-020: Long Input (1 000 chars) ────────────────────────────────────────
 
   test(
-    "[TC_020] — Excessively long input (1 000 chars) is handled without crash",
+    "[TC-020] — Excessively long input (1 000 chars) is handled without crash",
     async ({ loginPage, logger, page }) => {
       logger.info("Test: 1 000-character inputs in email and password fields");
 
@@ -329,14 +329,14 @@ test.describe("XSS & Input Validation", { tag: "@xss" }, () => {
         contentType: "text/plain",
       });
 
-      logger.info("TC_020 ✓ — page remained stable with 1 000-char input");
+      logger.info("TC-020 ✓ — page remained stable with 1 000-char input");
     },
   );
 
-  // ─── TC_021: Long Input Stress (10 000 chars) ────────────────────────────────
+  // ─── TC-021: Long Input Stress (10 000 chars) ────────────────────────────────
 
   test(
-    "[TC_021] — Excessively long input (10 000 chars) does not crash the server",
+    "[TC-021] — Excessively long input (10 000 chars) does not crash the server",
     async ({ loginPage, logger, page }) => {
       logger.info("Test: 10 000-character input — server-side limit stress test");
 
@@ -369,14 +369,14 @@ test.describe("XSS & Input Validation", { tag: "@xss" }, () => {
         contentType: "text/plain",
       });
 
-      logger.info("TC_021 ✓ — server did not crash with 10 000-char input");
+      logger.info("TC-021 ✓ — server did not crash with 10 000-char input");
     },
   );
 
-  // ─── TC_022: Malformed / Control Character Input ─────────────────────────────
+  // ─── TC-022: Malformed / Control Character Input ─────────────────────────────
 
   test(
-    "[TC_022] — Malformed and control character input is handled safely",
+    "[TC-022] — Malformed and control character input is handled safely",
     async ({ loginPage, logger, page }) => {
       logger.info("Test: malformed input — null bytes, control chars, Unicode edge cases");
       const results: Array<{ payload: IXssPayload; obs: Awaited<ReturnType<typeof runXssEmailTest>> }> = [];
@@ -409,14 +409,14 @@ test.describe("XSS & Input Validation", { tag: "@xss" }, () => {
         body: xssHelper.formatBatchReport(results),
         contentType: "text/plain",
       });
-      logger.info(`TC_022 complete — ${results.length} malformed payloads tested`);
+      logger.info(`TC-022 complete — ${results.length} malformed payloads tested`);
     },
   );
 
-  // ─── TC_023: Browser-Side XSS Verification (Critical Payloads) ───────────────
+  // ─── TC-023: Browser-Side XSS Verification (Critical Payloads) ───────────────
 
   test(
-    "[TC_023] — Browser-side XSS verification — critical payload suite",
+    "[TC-023] — Browser-side XSS verification — critical payload suite",
     async ({ loginPage, logger, page }) => {
       logger.info(
         "Test: full browser-side XSS observation for critical payloads " +
@@ -488,7 +488,7 @@ test.describe("XSS & Input Validation", { tag: "@xss" }, () => {
 
       const executed = results.filter((r) => xssHelper.isXssExecuted(r.obs));
       logger.info(
-        `TC_023 complete — ${results.length} critical payloads: ` +
+        `TC-023 complete — ${results.length} critical payloads: ` +
         `${executed.length} executed (unsafe), ${results.length - executed.length} blocked (safe)`,
       );
 
