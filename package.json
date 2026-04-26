@@ -15,12 +15,25 @@
     "test:debug": "playwright test --debug",
     "report": "playwright show-report reports/html",
     "lint": "tsc --noEmit",
-    "test:all": "playwright test"
+    "lint:eslint": "eslint 'e2e/**/*.ts' 'helpers/**/*.ts' 'page-objects/**/*.ts' 'utils/**/*.ts'",
+    "lint:prettier": "prettier --check 'e2e/**/*.ts' 'helpers/**/*.ts' 'page-objects/**/*.ts' 'utils/**/*.ts'",
+    "standards:check": "ts-node scripts/code-quality/standards-checker.ts",
+    "ai:review": "ts-node scripts/code-quality/ai-reviewer.ts",
+    "test:all": "playwright test",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.91.1",
     "@axe-core/playwright": "^4.11.2",
     "@playwright/test": "^1.44.0",
     "@types/node": "^20.12.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-playwright": "^1.6.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0",
+    "prettier": "^3.2.0",
     "typescript": "^5.4.0"
   },
   "dependencies": {

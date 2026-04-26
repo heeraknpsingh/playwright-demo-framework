@@ -1,0 +1,25 @@
+{
+  "e2e/**/*.ts": [
+    "eslint --fix --max-warnings=0",
+    "prettier --write"
+  ],
+  "helpers/**/*.ts": [
+    "eslint --fix --max-warnings=0",
+    "prettier --write"
+  ],
+  "page-objects/**/*.ts": [
+    "eslint --fix --max-warnings=0",
+    "prettier --write"
+  ],
+  "utils/**/*.ts": [
+    "eslint --fix --max-warnings=0",
+    "prettier --write"
+  ],
+  "fixtures/**/*.ts": [
+    "eslint --fix --max-warnings=0",
+    "prettier --write"
+  ],
+  "*.json": [
+    "prettier --write"
+  ]
+}

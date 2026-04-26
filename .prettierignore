@@ -1,0 +1,9 @@
+node_modules/
+reports/
+test-results/
+playwright-report/
+.husky/
+*.json
+!.prettierrc.json
+!tsconfig.json
+!package.json
