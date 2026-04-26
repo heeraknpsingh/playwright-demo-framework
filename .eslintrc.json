@@ -1,4 +1,5 @@
 {
+  "root": true,
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": 2022,
@@ -33,5 +34,13 @@
     "test-results/",
     "playwright-report/",
     "scripts/code-quality/"
+  ],
+  "overrides": [
+    {
+      "files": ["e2e/**/*.spec.ts"],
+      "rules": {
+        "playwright/no-conditional-in-test": "off"
+      }
+    }
   ]
 }

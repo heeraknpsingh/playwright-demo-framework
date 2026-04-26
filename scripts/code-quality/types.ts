@@ -23,10 +23,18 @@ export interface ReviewIssue {
   message: string;
 }
 
+export interface ReviewComment {
+  file: string;
+  line: number;
+  comment: string;
+}
+
 export interface ReviewResult {
   verdict: "pass" | "fail";
+  summary: string;
   issues: ReviewIssue[];
   suggestions: ReviewIssue[];
+  comments: ReviewComment[];
   model: string;
   tokensUsed?: number;
 }

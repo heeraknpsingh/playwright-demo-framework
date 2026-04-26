@@ -48,9 +48,10 @@ function buildSystemPrompt(): string {
   return `You are an expert code reviewer for a Playwright TypeScript test automation framework.
 
 ## Your responsibilities
-- Review ONLY the changed lines shown in the git diff (lines starting with +)
-- Identify violations of the coding standards and ESLint rules below
-- Return your findings as valid JSON only — no markdown, no prose, no explanation outside the JSON
+- Review the changed lines in the git diff like a senior engineer doing a pull request review
+- Give honest, specific, actionable feedback — including what looks good and what could be improved
+- Check for: coding standard violations, logic errors, naming, readability, test coverage gaps, missing assertions, flaky test risks, and maintainability
+- Also check against the ESLint rules and coding standards below
 
 ## Coding Standards
 ${standards}
@@ -59,16 +60,17 @@ ${standards}
 ${eslint}
 
 ## Response Format
-Return a single JSON object with this exact shape:
+Return a single JSON object with this exact shape — no markdown, no prose outside the JSON:
 {
   "verdict": "pass" | "fail",
+  "summary": "2-4 sentence overall assessment: what the change does, overall quality, and the most important thing to address",
   "issues": [
     {
       "file": "relative/path/to/file.ts",
       "line": <number, 0 if unknown>,
       "severity": "error",
-      "rule": "TC-001",
-      "message": "clear explanation of the violation"
+      "rule": "rule-id or short label",
+      "message": "clear explanation of the violation and how to fix it"
     }
   ],
   "suggestions": [
@@ -77,16 +79,23 @@ Return a single JSON object with this exact shape:
       "line": <number, 0 if unknown>,
       "severity": "warning",
       "rule": "suggestion",
-      "message": "actionable improvement suggestion"
+      "message": "specific, actionable improvement with example if helpful"
+    }
+  ],
+  "comments": [
+    {
+      "file": "relative/path/to/file.ts",
+      "line": <number, 0 if unknown>,
+      "comment": "inline review comment — explain why, not just what"
     }
   ]
 }
 
 ## Verdict rules
-- verdict = "fail" when issues array is non-empty (errors only)
-- verdict = "pass" when issues array is empty (suggestions are non-blocking)
-- Only flag clear violations — do not invent issues that are not present in the diff
-- Limit suggestions to the 3 most impactful improvements`;
+- verdict = "fail" when issues array is non-empty
+- verdict = "pass" when issues array is empty (suggestions and comments are non-blocking)
+- Be thorough: flag real problems, suggest real improvements, leave real inline comments
+- comments should read like a human reviewer wrote them — specific to the code, not generic advice`;
 }
 
 function buildUserPrompt(diff: string, mode: "staged" | "branch"): string {
@@ -141,18 +150,14 @@ async function reviewWithApi(diff: string, mode: "staged" | "branch"): Promise<R
 
 function reviewWithCli(diff: string, mode: "staged" | "branch"): ReviewResult {
   const prompt = `${buildSystemPrompt()}\n\n${buildUserPrompt(diff, mode)}`;
-  const tmpFile = path.join(ROOT, ".tmp-ai-review-prompt.txt");
 
-  try {
-    fs.writeFileSync(tmpFile, prompt, "utf-8");
-    const raw = execSync(`claude -p "$(cat ${tmpFile})" --output-format text`, {
-      cwd: ROOT,
-      timeout: 60000,
-    }).toString();
-    return parseClaudeResponse(raw, "claude-cli");
-  } finally {
-    if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
-  }
+  const raw = execSync(`claude -p --output-format text`, {
+    cwd: ROOT,
+    timeout: 120000,
+    input: prompt,
+  }).toString();
+
+  return parseClaudeResponse(raw, "claude-cli");
 }
 
 // ─── Response Parser ─────────────────────────────────────────────────────────
@@ -162,24 +167,23 @@ function parseClaudeResponse(raw: string, model: string, tokensUsed?: number): R
   const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/) || raw.match(/(\{[\s\S]*\})/);
   const jsonStr = jsonMatch ? jsonMatch[1].trim() : raw.trim();
 
-  let parsed: { verdict: string; issues?: ReviewIssue[]; suggestions?: ReviewIssue[] };
+  let parsed: {
+    verdict: string;
+    summary?: string;
+    issues?: ReviewIssue[];
+    suggestions?: ReviewIssue[];
+    comments?: import("./types").ReviewComment[];
+  };
 
   try {
     parsed = JSON.parse(jsonStr);
   } catch {
-    // If Claude response can't be parsed, treat as a pass with a warning
     return {
       verdict: "pass",
+      summary: "AI review response could not be parsed — manual review recommended.",
       issues: [],
-      suggestions: [
-        {
-          file: "unknown",
-          line: 0,
-          severity: "warning",
-          rule: "parse-error",
-          message: `AI review response could not be parsed — manual review recommended`,
-        },
-      ],
+      suggestions: [],
+      comments: [],
       model,
       tokensUsed,
     };
@@ -187,8 +191,10 @@ function parseClaudeResponse(raw: string, model: string, tokensUsed?: number): R
 
   return {
     verdict: parsed.verdict === "fail" ? "fail" : "pass",
+    summary: parsed.summary || "",
     issues: (parsed.issues || []).map((i) => ({ ...i, severity: "error" as const })),
     suggestions: (parsed.suggestions || []).map((s) => ({ ...s, severity: "warning" as const })),
+    comments: parsed.comments || [],
     model,
     tokensUsed,
   };
