@@ -27,10 +27,13 @@ function checkTestIdFormat(filePath: string, lines: string[]): Violation[] {
   lines.forEach((line, i) => {
     const isTestCall = /^\s*test\s*\(/.test(line) && !line.includes("test.describe") && !line.includes("test.beforeEach") && !line.includes("test.afterEach") && !line.includes("test.skip") && !line.includes("test.only");
     if (isTestCall) {
-      const hasValidId = /["']\[TC_[A-Z0-9_]+\]/.test(line);   // complete: [TC_XXX]
-      const hasOpenBracket = /["']\[/.test(line);               // title starts with [
-      const hasTcStart = /["']\[TC_/.test(line);               // title starts with [TC_
-      const hasTcClosedBracket = /["']\[TC_[A-Z0-9_]+\]/.test(line); // [TC_XXX] closed
+      // Support both single-line test("title", ...) and multiline test(\n  "title",\n  ...)
+      const checkLine = /["']/.test(line) ? line : (lines[i + 1] || "");
+
+      const hasValidId = /["']\[TC-[A-Z0-9-]+\]/.test(checkLine);   // complete: [TC-XXX]
+      const hasOpenBracket = /["']\[/.test(checkLine);               // title starts with [
+      const hasTcStart = /["']\[TC-/.test(checkLine);               // title starts with [TC-
+      const hasTcClosedBracket = /["']\[TC-[A-Z0-9-]+\]/.test(checkLine); // [TC-XXX] closed
 
       if (!hasValidId) {
         if (!hasOpenBracket) {
@@ -38,8 +41,8 @@ function checkTestIdFormat(filePath: string, lines: string[]): Violation[] {
             violation(
               filePath,
               i + 1,
-              "TC_001",
-              `Test title must start with '[' — expected format: [TC_XXX] — description`,
+              "TC-001",
+              `Test title must start with '[' — expected format: [TC-XXX] — description`,
               "error",
             ),
           );
@@ -48,8 +51,8 @@ function checkTestIdFormat(filePath: string, lines: string[]): Violation[] {
             violation(
               filePath,
               i + 1,
-              "TC_001",
-              `Test ID must use 'TC_' prefix inside brackets — expected: [TC_XXX] (e.g. [TC_001])`,
+              "TC-001",
+              `Test ID must use 'TC-' prefix inside brackets — expected: [TC-XXX] (e.g. [TC-001])`,
               "error",
             ),
           );
@@ -58,8 +61,8 @@ function checkTestIdFormat(filePath: string, lines: string[]): Violation[] {
             violation(
               filePath,
               i + 1,
-              "TC_001",
-              `Test ID bracket is not closed — expected ']' after the ID (e.g. [TC_001] not [TC_001)`,
+              "TC-001",
+              `Test ID bracket is not closed — expected ']' after the ID (e.g. [TC-001] not [TC-001)`,
               "error",
             ),
           );
@@ -81,7 +84,7 @@ function checkFixtureImport(filePath: string, lines: string[]): Violation[] {
         violation(
           filePath,
           i + 1,
-          "TC_002",
+          "TC-002",
           `Import 'test'/'expect' from 'fixtures/base.fixture', not '@playwright/test'`,
           "error",
         ),
@@ -100,7 +103,7 @@ function checkNoConsole(filePath: string, lines: string[]): Violation[] {
         violation(
           filePath,
           i + 1,
-          "TC_003",
+          "TC-003",
           `console.* is forbidden — use logger.info/warn/error/debug instead`,
           "error",
         ),
@@ -126,7 +129,7 @@ function checkPageObjectContract(filePath: string, lines: string[]): Violation[]
       violation(
         filePath,
         1,
-        "TC_004",
+        "TC-004",
         `Class '${className}' must extend BasePage`,
         "error",
       ),
@@ -139,7 +142,7 @@ function checkPageObjectContract(filePath: string, lines: string[]): Violation[]
       violation(
         filePath,
         1,
-        "TC_004",
+        "TC-004",
         `Class '${className}' must implement 'async waitForPageLoad(): Promise<void>'`,
         "error",
       ),
@@ -161,7 +164,7 @@ function checkTestTags(filePath: string, lines: string[]): Violation[] {
           violation(
             filePath,
             i + 1,
-            "TC_005",
+            "TC-005",
             `test.describe() must include a tag — allowed: ${allowedTags.join(", ")}`,
             "error",
           ),
@@ -189,7 +192,7 @@ function checkNoHardcodedCredentials(filePath: string, lines: string[]): Violati
         violation(
           filePath,
           i + 1,
-          "TC_006",
+          "TC-006",
           `Hardcoded email detected — use testUser fixture instead`,
           "error",
         ),
@@ -202,7 +205,7 @@ function checkNoHardcodedCredentials(filePath: string, lines: string[]): Violati
           violation(
             filePath,
             i + 1,
-            "TC_006",
+            "TC-006",
             `Hardcoded password detected — use testUser fixture instead`,
             "error",
           ),
@@ -226,7 +229,7 @@ function checkNoHardcodedUrls(filePath: string, lines: string[]): Violation[] {
         violation(
           filePath,
           i + 1,
-          "TC_007",
+          "TC-007",
           `Hardcoded URL detected — use envConfig.baseUrl or Playwright's baseURL instead`,
           "warning",
         ),
@@ -251,7 +254,7 @@ function checkEvidenceCapture(filePath: string, lines: string[]): Violation[] {
         violation(
           filePath,
           i + 1,
-          "TC_008",
+          "TC-008",
           `Negative test ('${line.trim().slice(0, 60)}...') must call captureEvidence() and attach screenshot`,
           "warning",
         ),

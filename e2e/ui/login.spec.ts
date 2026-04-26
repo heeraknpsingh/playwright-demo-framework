@@ -7,7 +7,7 @@ test.describe("Login — UI Tests", { tag: "@ui" }, () => {
     await loginPage.navigateToLogin();
   });
 
-  test("[TC_005] — Valid login with correct credentials", async ({
+  test("[TC-005] — Valid login with correct credentials", async ({
     loginPage,
     logger,
     testUser,
@@ -23,7 +23,7 @@ test.describe("Login — UI Tests", { tag: "@ui" }, () => {
     expect(loggedInEmail.toLowerCase()).toContain(email.toLowerCase());
   });
 
-  test("[TC_006] — Invalid password shows error message", async ({
+  test("[TC-006] — Invalid password shows error message", async ({
     loginPage,
     logger,
   }) => {
@@ -53,7 +53,7 @@ test.describe("Login — UI Tests", { tag: "@ui" }, () => {
     expect(errorText).not.toBeNull();
   });
 
-  test("[TC_007] — Unregistered email shows error message", async ({
+  test("[TC-007] — Unregistered email shows error message", async ({
     loginPage,
     logger,
   }) => {
@@ -82,7 +82,7 @@ test.describe("Login — UI Tests", { tag: "@ui" }, () => {
     expect(isError).toBeTruthy();
   });
 
-  test("[TC_008] — Empty credentials show validation errors", async ({
+  test("[TC-008] — Empty credentials show validation errors", async ({
     loginPage,
     logger,
   }) => {
@@ -111,7 +111,7 @@ test.describe("Login — UI Tests", { tag: "@ui" }, () => {
     expect(isError).toBeTruthy();
   });
 
-  test("[TC_009] — Logout after successful login", async ({
+  test("[TC-009] — Logout after successful login", async ({
     loginPage,
     homePage,
     logger,

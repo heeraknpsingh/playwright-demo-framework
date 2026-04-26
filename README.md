@@ -49,14 +49,14 @@ playwright-demo-framework/
 │
 ├── e2e/                               # Test specs
 │   ├── ui/
-│   │   ├── login.spec.ts              # Login UI tests           (TC_005–TC_009)
-│   │   ├── defensive-security.spec.ts # Security detection tests (TC_010–TC_014)
-│   │   ├── xss-input-validation.spec.ts # XSS / input tests     (TC_015–TC_023)
-│   │   ├── session-management.spec.ts # Session security tests   (TC_024–TC_028)
-│   │   ├── accessibility.spec.ts      # WCAG 2.1 AA a11y tests  (TC_029–TC_037)
-│   │   └── performance.spec.ts        # Lighthouse perf audits  (TC_PERF_001–004)
+│   │   ├── login.spec.ts              # Login UI tests           (TC-005–TC-009)
+│   │   ├── defensive-security.spec.ts # Security detection tests (TC-010–TC-014)
+│   │   ├── xss-input-validation.spec.ts # XSS / input tests     (TC-015–TC-023)
+│   │   ├── session-management.spec.ts # Session security tests   (TC-024–TC-028)
+│   │   ├── accessibility.spec.ts      # WCAG 2.1 AA a11y tests  (TC-029–TC-037)
+│   │   └── performance.spec.ts        # Lighthouse perf audits  (TC-PERF_001–004)
 │   └── api/
-│       └── login-api.spec.ts          # Login API tests          (TC_001–TC_004)
+│       └── login-api.spec.ts          # Login API tests          (TC-001–TC-004)
 │
 ├── page-objects/                      # Page Object Model classes
 │   ├── base/
@@ -193,7 +193,7 @@ npm run test:debug
 npx playwright test e2e/ui/session-management.spec.ts
 
 # Run a specific test case by ID
-npx playwright test --grep "TC_024"
+npx playwright test --grep "TC-024"
 
 # View the HTML report after a run
 npm run report
@@ -203,54 +203,54 @@ npm run report
 
 ## Test Coverage
 
-### API Tests — `@api` (TC_001–TC_004)
+### API Tests — `@api` (TC-001–TC-004)
 
 | ID | Test |
 |---|---|
-| TC_001 | Valid credentials return a successful login response |
-| TC_002 | Invalid password returns an authentication error |
-| TC_003 | Accessing the account endpoint without auth redirects to login |
-| TC_004 | Non-existent email returns an authentication error |
+| TC-001 | Valid credentials return a successful login response |
+| TC-002 | Invalid password returns an authentication error |
+| TC-003 | Accessing the account endpoint without auth redirects to login |
+| TC-004 | Non-existent email returns an authentication error |
 
-### Login UI Tests — `@ui` (TC_005–TC_009)
+### Login UI Tests — `@ui` (TC-005–TC-009)
 
 | ID | Test |
 |---|---|
-| TC_005 | Valid login with correct credentials |
-| TC_006 | Invalid password shows an error message |
-| TC_007 | Unregistered email shows an error message |
-| TC_008 | Empty credentials show validation errors |
-| TC_009 | Logout after successful login |
+| TC-005 | Valid login with correct credentials |
+| TC-006 | Invalid password shows an error message |
+| TC-007 | Unregistered email shows an error message |
+| TC-008 | Empty credentials show validation errors |
+| TC-009 | Logout after successful login |
 
-### Defensive Security Detection — `@security` (TC_010–TC_014)
+### Defensive Security Detection — `@security` (TC-010–TC-014)
 
 These tests **observe and document** the presence or absence of security mechanisms. They do not attempt to bypass them.
 
 | ID | Test |
 |---|---|
-| TC_010 | Detect CAPTCHA or bot-protection on the login page |
-| TC_011 | Detect MFA challenge after a valid login attempt |
-| TC_012 | Detect rate-limiting after 6 repeated failed attempts |
-| TC_013 | Detect account lockout after 5 invalid-password attempts |
-| TC_014 | Detect bot-protection response headers from rapid API login requests |
+| TC-010 | Detect CAPTCHA or bot-protection on the login page |
+| TC-011 | Detect MFA challenge after a valid login attempt |
+| TC-012 | Detect rate-limiting after 6 repeated failed attempts |
+| TC-013 | Detect account lockout after 5 invalid-password attempts |
+| TC-014 | Detect bot-protection response headers from rapid API login requests |
 
-### XSS Input Validation — `@xss` (TC_015–TC_023)
+### XSS Input Validation — `@xss` (TC-015–TC-023)
 
 Tests submit 40+ payloads across 6 categories (script injection, HTML injection, event handlers, special characters, long input, and malformed input) and verify no XSS executes in the browser.
 
 | ID | Test |
 |---|---|
-| TC_015 | Script injection payloads are blocked |
-| TC_016 | HTML injection payloads are blocked |
-| TC_017 | Event handler and JS URI payloads are blocked |
-| TC_018 | Special characters are handled safely |
-| TC_019 | SQL injection payloads do not grant access |
-| TC_020 | Long input (1,000 chars) is handled without crash |
-| TC_021 | Long input (10,000 chars) does not destabilise the server |
-| TC_022 | Malformed and control-character inputs are handled safely |
-| TC_023 | Browser-side XSS observation — critical payloads (dialogs, DOM, console, network) |
+| TC-015 | Script injection payloads are blocked |
+| TC-016 | HTML injection payloads are blocked |
+| TC-017 | Event handler and JS URI payloads are blocked |
+| TC-018 | Special characters are handled safely |
+| TC-019 | SQL injection payloads do not grant access |
+| TC-020 | Long input (1,000 chars) is handled without crash |
+| TC-021 | Long input (10,000 chars) does not destabilise the server |
+| TC-022 | Malformed and control-character inputs are handled safely |
+| TC-023 | Browser-side XSS observation — critical payloads (dialogs, DOM, console, network) |
 
-### Performance — `@performance` (TC_PERF_001–TC_PERF_004)
+### Performance — `@performance` (TC-PERF_001–TC-PERF_004)
 
 Lighthouse audits run via the `lighthouse` npm package connected directly to Playwright's Chromium instance over the Chrome DevTools Protocol (CDP). Each test navigates to the target page, runs a full Lighthouse audit, and enforces the score budgets below. Budget violations fail the test and block CI.
 
@@ -267,10 +267,10 @@ Lighthouse audits run via the `lighthouse` npm package connected directly to Pla
 
 | ID | Page | Auth required |
 |---|---|---|
-| TC_PERF_001 | Home (`/`) | No |
-| TC_PERF_002 | Login (`/login`) | No |
-| TC_PERF_003 | Account / profile (`/customer/info`) | Yes — logs in via `LoginPage` fixture |
-| TC_PERF_004 | Order history (`/customer/orders`) | Yes — logs in via `LoginPage` fixture |
+| TC-PERF_001 | Home (`/`) | No |
+| TC-PERF_002 | Login (`/login`) | No |
+| TC-PERF_003 | Account / profile (`/customer/info`) | Yes — logs in via `LoginPage` fixture |
+| TC-PERF_004 | Order history (`/customer/orders`) | Yes — logs in via `LoginPage` fixture |
 
 Each test attaches the full Lighthouse HTML report to the Playwright HTML report (visible per-test under the **Attachments** tab) and saves both `.html` and `.json` files to `reports/lighthouse/`.
 
@@ -284,36 +284,36 @@ Lighthouse connects to Chrome via CDP on port `9222`. The `performance` Playwrig
 
 ---
 
-### Accessibility — `@a11y` (TC_029–TC_037)
+### Accessibility — `@a11y` (TC-029–TC-037)
 
 Tests use **axe-core** (`@axe-core/playwright`) for automated WCAG 2.1 AA scanning, supplemented by targeted keyboard, focus, and structural checks. Critical and serious violations fail the test; moderate and minor violations are documented as warnings in the attached report.
 
 | ID | Test |
 |---|---|
-| TC_029 | Login page — full WCAG 2.1 AA axe-core scan (unauthenticated) |
-| TC_030 | Home page — full WCAG 2.1 AA axe-core scan (unauthenticated) |
-| TC_031 | Home page — full WCAG 2.1 AA axe-core scan (authenticated, dynamic content included) |
-| TC_032 | Login form — keyboard Tab order reaches Email → Password → Login button in sequence |
-| TC_033 | Login error message — present in DOM and announced via `role="alert"` or `aria-live`; error state page has no new critical/serious violations |
-| TC_034 | Login form — every interactive element displays a visible focus indicator when focused via keyboard |
-| TC_035 | All images on login and home pages have an `alt` attribute; decorative images use `alt=""` |
-| TC_036 | Heading hierarchy is logical (no skipped levels, exactly one `h1` per page) |
-| TC_037 | Text colour contrast meets WCAG 2.1 AA requirements (axe `color-contrast` rule) |
+| TC-029 | Login page — full WCAG 2.1 AA axe-core scan (unauthenticated) |
+| TC-030 | Home page — full WCAG 2.1 AA axe-core scan (unauthenticated) |
+| TC-031 | Home page — full WCAG 2.1 AA axe-core scan (authenticated, dynamic content included) |
+| TC-032 | Login form — keyboard Tab order reaches Email → Password → Login button in sequence |
+| TC-033 | Login error message — present in DOM and announced via `role="alert"` or `aria-live`; error state page has no new critical/serious violations |
+| TC-034 | Login form — every interactive element displays a visible focus indicator when focused via keyboard |
+| TC-035 | All images on login and home pages have an `alt` attribute; decorative images use `alt=""` |
+| TC-036 | Heading hierarchy is logical (no skipped levels, exactly one `h1` per page) |
+| TC-037 | Text colour contrast meets WCAG 2.1 AA requirements (axe `color-contrast` rule) |
 
 Each test attaches to the Playwright HTML report:
 - Plain-text violation summary (failures / warnings split)
 - Full axe-core JSON output for integration with dashboards or CI tooling
 - Page screenshot at scan time
 
-### Session Management — `@session` (TC_024–TC_028)
+### Session Management — `@session` (TC-024–TC-028)
 
 | ID | Test | Approach |
 |---|---|---|
-| TC_024 | Cookie replay observation after logout | Captures cookies pre-logout, injects them into a fresh browser context, documents whether the server invalidates the session |
-| TC_025 | Protected pages are inaccessible after logout | Verifies `/customer/info`, `/order/history`, and `/customer/addresses` deny access after logout |
-| TC_026 | Storage state replay observation after logout | Saves a full `storageState` snapshot (cookies + localStorage + sessionStorage), restores it post-logout, documents server behaviour |
-| TC_027 | Multiple simultaneous sessions are isolated | Opens two separate `browser.newContext()` sessions with the same credentials, verifies isolation, and confirms logout from one context does not affect the other |
-| TC_028 | Re-authentication restores protected access | Full lifecycle: login → access protected page → logout → verify blocked → re-authenticate → verify access restored |
+| TC-024 | Cookie replay observation after logout | Captures cookies pre-logout, injects them into a fresh browser context, documents whether the server invalidates the session |
+| TC-025 | Protected pages are inaccessible after logout | Verifies `/customer/info`, `/order/history`, and `/customer/addresses` deny access after logout |
+| TC-026 | Storage state replay observation after logout | Saves a full `storageState` snapshot (cookies + localStorage + sessionStorage), restores it post-logout, documents server behaviour |
+| TC-027 | Multiple simultaneous sessions are isolated | Opens two separate `browser.newContext()` sessions with the same credentials, verifies isolation, and confirms logout from one context does not affect the other |
+| TC-028 | Re-authentication restores protected access | Full lifecycle: login → access protected page → logout → verify blocked → re-authenticate → verify access restored |
 
 ---
 
@@ -336,14 +336,14 @@ npm run report
 
 Tests attach additional evidence to the HTML report:
 
-- **Security reports** — plain-text verdict files (TC_010–TC_014, TC_024–TC_026)
+- **Security reports** — plain-text verdict files (TC-010–TC-014, TC-024–TC-026)
 - **XSS observation reports** — per-payload and batch summaries
 - **Session reports** — cookie lists, storage snapshots, access control tables
 - **Screenshots** — captured at key steps and always on failure
 - **Page HTML source** — attached on failure for DOM inspection
 - **Videos / traces** — retained on failure for step-by-step replay
 
-Lighthouse reports are also attached directly to the Playwright HTML report under the **Attachments** tab of each `TC_PERF_*` test.
+Lighthouse reports are also attached directly to the Playwright HTML report under the **Attachments** tab of each `TC-PERF_*` test.
 
 ---
 
@@ -393,10 +393,10 @@ Every test automatically receives a named logger via `base.fixture.ts`. Logs are
 Example output:
 
 ```
-[2026-04-22 14:03:12] [INFO ] [TC_024 — Cookie replay] Step 1: user authenticated
-[2026-04-22 14:03:13] [INFO ] [TC_024 — Cookie replay] Step 2: captured 9 cookies pre-logout
-[2026-04-22 14:03:14] [WARN ] [TC_024 — Cookie replay] SECURITY FINDING: server did not invalidate session — cookie replay succeeded
-[2026-04-22 14:03:15] [INFO ] [TC_024 — Cookie replay] Test PASSED: "[TC_024] — ..."
+[2026-04-22 14:03:12] [INFO ] [TC-024 — Cookie replay] Step 1: user authenticated
+[2026-04-22 14:03:13] [INFO ] [TC-024 — Cookie replay] Step 2: captured 9 cookies pre-logout
+[2026-04-22 14:03:14] [WARN ] [TC-024 — Cookie replay] SECURITY FINDING: server did not invalidate session — cookie replay succeeded
+[2026-04-22 14:03:15] [INFO ] [TC-024 — Cookie replay] Test PASSED: "[TC-024] — ..."
 ```
 
 ---
@@ -445,7 +445,7 @@ productPage: async ({ page, logger }, use) => {
 import { test, expect } from '../../fixtures/base.fixture';
 
 test.describe('Product — UI Tests', { tag: '@ui' }, () => {
-  test('[TC_030] — Add item to cart', async ({ loginPage, testUser, logger }) => {
+  test('[TC-030] — Add item to cart', async ({ loginPage, testUser, logger }) => {
     await loginPage.navigateToLogin();
     await loginPage.login(testUser.email, testUser.password);
     // ...
@@ -509,7 +509,7 @@ The following assumptions were made when designing and implementing this framewo
 
 1. **Account pre-exists.** A registered user account is available at `USER_EMAIL` / `USER_PASSWORD`. The framework does not create or delete test accounts — it only uses the configured credentials.
 
-2. **Single shared test account.** All tests (including the multi-context session tests in TC_027) log in with the same credentials. The application allows the same account to hold multiple concurrent sessions.
+2. **Single shared test account.** All tests (including the multi-context session tests in TC-027) log in with the same credentials. The application allows the same account to hold multiple concurrent sessions.
 
 3. **Application availability.** The target app (`demowebshop.tricentis.com`) is publicly reachable and responsive. It is a shared, third-party demo instance not under this framework's control.
 
@@ -529,7 +529,7 @@ The following assumptions were made when designing and implementing this framewo
 
 10. **Network conditions are normal.** Tests do not simulate slow networks, offline mode, or packet loss.
 
-### Performance Tests (TC_PERF_001–TC_PERF_004)
+### Performance Tests (TC-PERF_001–TC-PERF_004)
 
 19. **Budgets reflect the demo app's measured baseline.** Thresholds are set ~5 points below the observed scores for `demowebshop.tricentis.com`. Their purpose is catching regressions, not enforcing absolute quality bars on a third-party demo app.
 
@@ -539,7 +539,7 @@ The following assumptions were made when designing and implementing this framewo
 
 22. **Lighthouse scores are non-deterministic across runs.** Network conditions, server response times, and CPU throttling simulation mean scores can vary by ±5 points between runs on the same page. Thresholds are set with enough headroom to absorb this variance.
 
-### Accessibility Tests (TC_029–TC_037)
+### Accessibility Tests (TC-029–TC-037)
 
 14. **WCAG 2.1 AA is the target standard.** axe-core is configured with the `wcag2a`, `wcag2aa`, and `wcag21aa` tag sets. WCAG 2.2 and AAA criteria are out of scope.
 
@@ -547,13 +547,13 @@ The following assumptions were made when designing and implementing this framewo
 
 16. **Third-party widgets are excluded.** reCAPTCHA, hCaptcha, Doubleclick, and Google iframes are excluded from axe scans because they are outside the application's control and frequently contain known violations.
 
-17. **axe-core is not an exhaustive audit.** Automated scanning catches approximately 30–40 % of WCAG issues. The targeted tests (TC_032–TC_036) supplement automation with checks that axe cannot perform reliably (keyboard focus order, focus ring visibility, actual tab behaviour). A full accessibility audit would also require manual testing with a screen reader (e.g. VoiceOver, NVDA).
+17. **axe-core is not an exhaustive audit.** Automated scanning catches approximately 30–40 % of WCAG issues. The targeted tests (TC-032–TC-036) supplement automation with checks that axe cannot perform reliably (keyboard focus order, focus ring visibility, actual tab behaviour). A full accessibility audit would also require manual testing with a screen reader (e.g. VoiceOver, NVDA).
 
-18. **Focus ring detection is CSS-computed.** TC_034 reads `outline-style` and `outline-width` from the computed style at focus time. Browsers that implement `:focus-visible` differently may report `outline: none` even when a ring is visible via `box-shadow`. The test currently checks `outline` only; `box-shadow`-based rings are not counted as passing.
+18. **Focus ring detection is CSS-computed.** TC-034 reads `outline-style` and `outline-width` from the computed style at focus time. Browsers that implement `:focus-visible` differently may report `outline: none` even when a ring is visible via `box-shadow`. The test currently checks `outline` only; `box-shadow`-based rings are not counted as passing.
 
-### Security Tests (TC_010–TC_014, TC_024–TC_028)
+### Security Tests (TC-010–TC-014, TC-024–TC-028)
 
-11. **Defensive-testing philosophy.** Security detection tests (TC_010–TC_014) and session observation tests (TC_024, TC_026) observe and document the application's security posture rather than asserting it must pass or fail. A finding is reported through attached reports and log warnings, not a hard test failure. This approach prevents false CI failures when testing against a demo application with known limitations.
+11. **Defensive-testing philosophy.** Security detection tests (TC-010–TC-014) and session observation tests (TC-024, TC-026) observe and document the application's security posture rather than asserting it must pass or fail. A finding is reported through attached reports and log warnings, not a hard test failure. This approach prevents false CI failures when testing against a demo application with known limitations.
 
 12. **Protected paths are stable.** The paths tested for access control (`/customer/info`, `/order/history`, `/customer/addresses`) are known to require authentication. Their redirect or denial behaviour is asserted accordingly.
 
@@ -566,22 +566,22 @@ The following assumptions were made when designing and implementing this framewo
 ### Application-Level Limitations (demowebshop.tricentis.com)
 
 1. **No server-side session invalidation on logout.**
-   The application performs a client-side-only logout — it clears the session cookie from the browser but does not invalidate the token on the server. As a result, pre-logout cookies or a full `storageState` snapshot injected into a new browser context can still authenticate against the server. TC_024 and TC_026 observe and document this behaviour rather than hard-asserting, because the limitation belongs to the target app, not the framework. In a production target these tests should assert `expect(sessionStillActive).toBeFalsy()`.
+   The application performs a client-side-only logout — it clears the session cookie from the browser but does not invalidate the token on the server. As a result, pre-logout cookies or a full `storageState` snapshot injected into a new browser context can still authenticate against the server. TC-024 and TC-026 observe and document this behaviour rather than hard-asserting, because the limitation belongs to the target app, not the framework. In a production target these tests should assert `expect(sessionStillActive).toBeFalsy()`.
 
 2. **Inconsistent redirect behaviour on protected pages.**
-   `/customer/info` redirects explicitly to `/login` after logout. Other protected paths (`/order/history`, `/customer/addresses`) return a "page not found" response without changing the URL to `/login`. TC_025 handles this with a two-condition access-denial check: URL contains `/login` **or** the header login link is visible (confirming the user is unauthenticated).
+   `/customer/info` redirects explicitly to `/login` after logout. Other protected paths (`/order/history`, `/customer/addresses`) return a "page not found" response without changing the URL to `/login`. TC-025 handles this with a two-condition access-denial check: URL contains `/login` **or** the header login link is visible (confirming the user is unauthenticated).
 
 3. **No server-side session cross-invalidation.**
-   Logging out in one browser context does not invalidate sessions held by other contexts for the same account. TC_027 documents this behaviour — concurrent sessions for the same user remain independent. This is common in demo apps but would be a security concern in production.
+   Logging out in one browser context does not invalidate sessions held by other contexts for the same account. TC-027 documents this behaviour — concurrent sessions for the same user remain independent. This is common in demo apps but would be a security concern in production.
 
 4. **CAPTCHA may block repeated login attempts.**
-   Rapid or repeated login attempts (particularly in the brute-force and rate-limit tests) may trigger CAPTCHA challenges. The framework detects and documents CAPTCHA presence (TC_010) but cannot solve it. If triggered, affected tests will log a security challenge finding and continue with a documented observation rather than failing.
+   Rapid or repeated login attempts (particularly in the brute-force and rate-limit tests) may trigger CAPTCHA challenges. The framework detects and documents CAPTCHA presence (TC-010) but cannot solve it. If triggered, affected tests will log a security challenge finding and continue with a documented observation rather than failing.
 
 5. **Shared public demo instance.**
    The target is a publicly hosted, shared demo application. It may be slow, temporarily unavailable, or exhibit non-deterministic behaviour (e.g., a different user's activity affecting shared state). The framework does not control the environment.
 
 6. **Rate-limiting and account lockout are non-deterministic.**
-   Whether the application triggers rate-limiting (TC_012) or account lockout (TC_013) depends on recent activity from all users of the shared instance, not only the test run. These tests document the outcome of detection, not a guaranteed trigger.
+   Whether the application triggers rate-limiting (TC-012) or account lockout (TC-013) depends on recent activity from all users of the shared instance, not only the test run. These tests document the outcome of detection, not a guaranteed trigger.
 
 ### Framework-Level Limitations
 
@@ -614,4 +614,4 @@ The following assumptions were made when designing and implementing this framewo
 18. **`reports/lighthouse/` accumulates files across runs.** HTML and JSON report files are named with a timestamp and never overwritten. Old reports should be cleaned up periodically or the directory should be excluded from long-term storage.
 
 13. **Session tests require the `browser` fixture — not available in API-only contexts.**
-    TC_024, TC_026, and TC_027 use `browser.newContext()` to create isolated browser sessions. This requires a full browser process and cannot be run in Playwright's API-only (`request`) mode.
+    TC-024, TC-026, and TC-027 use `browser.newContext()` to create isolated browser sessions. This requires a full browser process and cannot be run in Playwright's API-only (`request`) mode.

@@ -7,29 +7,29 @@ All contributors must follow these standards. Violations block commits.
 
 ## Rule 1 — Test ID Format
 
-Every `test()` title must follow this exact format: `[TC_XXX] — description`
+Every `test()` title must follow this exact format: `[TC-XXX] — description`
 
 Rules:
 - Title must **start** with `[` (opening bracket)
-- ID must use the prefix `TC_` immediately after `[`
+- ID must use the prefix `TC-` immediately after `[`
 - ID must **end** with `]` (closing bracket)
-- Full pattern: `[TC_XXX]` where `XXX` is an alphanumeric identifier (e.g. `001`, `AI_001`)
+- Full pattern: `[TC-XXX]` where `XXX` is an alphanumeric identifier (e.g. `001`, `AI_001`)
 
 **Why:** Enables traceability between test cases and requirements. IDs are referenced in reports, CI output, and audit trails. Malformed IDs break report parsers and test filters.
 
 ```ts
 // CORRECT
-test("[TC_005] — Valid login with correct credentials", async () => { ... });
-test("[TC_AI_001] — Account info page loads for logged-in user", async () => { ... });
+test("[TC-005] — Valid login with correct credentials", async () => { ... });
+test("[TC-AI_001] — Account info page loads for logged-in user", async () => { ... });
 
 // WRONG — no opening bracket
-test("TC_005 — Valid login with correct credentials", async () => { ... });
+test("TC-005 — Valid login with correct credentials", async () => { ... });
 
-// WRONG — missing TC_ prefix inside brackets
+// WRONG — missing TC- prefix inside brackets
 test("[005] — Valid login with correct credentials", async () => { ... });
 
 // WRONG — bracket not closed
-test("[TC_005 — Valid login with correct credentials", async () => { ... });
+test("[TC-005 — Valid login with correct credentials", async () => { ... });
 
 // WRONG — no ID at all
 test("Valid login with correct credentials", async () => { ... });
@@ -159,7 +159,7 @@ Any `test()` whose title contains the words `invalid`, `error`, `fail`, or `wron
 
 ```ts
 // CORRECT
-test("[TC_006] — Invalid password shows error message", async ({ loginPage }) => {
+test("[TC-006] — Invalid password shows error message", async ({ loginPage }) => {
   await loginPage.login(email, wrongPassword);
   const screenshot = await loginPage.captureEvidence("tc006-invalid-password");
   await test.info().attach("auth-failure-screenshot", {
@@ -170,7 +170,7 @@ test("[TC_006] — Invalid password shows error message", async ({ loginPage }) 
 });
 
 // WRONG — no evidence capture
-test("[TC_006] — Invalid password shows error message", async ({ loginPage }) => {
+test("[TC-006] — Invalid password shows error message", async ({ loginPage }) => {
   await loginPage.login(email, wrongPassword);
   expect(await loginPage.isErrorVisible()).toBeTruthy();
 });
@@ -182,7 +182,7 @@ test("[TC_006] — Invalid password shows error message", async ({ loginPage }) 
 
 | # | Rule | Scope | Severity |
 |---|------|-------|----------|
-| 1 | Test ID format `[TC_XXX]` required | `e2e/**/*.spec.ts` | Error |
+| 1 | Test ID format `[TC-XXX]` required | `e2e/**/*.spec.ts` | Error |
 | 2 | Import from `fixtures/base.fixture` | `e2e/**/*.spec.ts` | Error |
 | 3 | No `console.*` — use `logger` | All `.ts` files | Error |
 | 4 | Page objects extend `BasePage` + implement `waitForPageLoad` | `page-objects/**/*.ts` | Error |

@@ -32,7 +32,7 @@ test.describe("Session Management — Security Tests", { tag: "@session" }, () =
   });
 
   /**
-   * TC_024 — Cookie Replay Observation After Logout
+   * TC-024 — Cookie Replay Observation After Logout
    *
    * Captures session cookies before logout and replays them in a fresh browser
    * context.  The test documents whether the server validates session tokens on
@@ -42,7 +42,7 @@ test.describe("Session Management — Security Tests", { tag: "@session" }, () =
    * SECURE   — stale cookies are rejected → protected page redirects to /login.
    * FINDING  — stale cookies are accepted → server does not invalidate sessions.
    */
-  test("[TC_024] — Session cookies invalidated after logout (cookie replay observation)", async ({
+  test("[TC-024] — Session cookies invalidated after logout (cookie replay observation)", async ({
     page,
     browser,
     loginPage,
@@ -107,7 +107,7 @@ test.describe("Session Management — Security Tests", { tag: "@session" }, () =
 
     await testInfo.attach("cookie-replay-security-report", {
       body: [
-        "=== TC_024: Cookie Replay Attack Observation ===",
+        "=== TC-024: Cookie Replay Attack Observation ===",
         `Cookies captured before logout   : ${cookiesBeforeLogout.length}`,
         `URL after replay attempt         : ${replayUrl}`,
         `Redirected to login page         : ${replayUrl.includes("/login")}`,
@@ -124,10 +124,10 @@ test.describe("Session Management — Security Tests", { tag: "@session" }, () =
     });
 
     if (sessionInvalidated) {
-      logger.info("TC_024 PASS: server invalidated stale session after logout");
+      logger.info("TC-024 PASS: server invalidated stale session after logout");
     } else {
       logger.warn(
-        "TC_024 SECURITY FINDING: server did not invalidate session — cookie replay succeeded",
+        "TC-024 SECURITY FINDING: server did not invalidate session — cookie replay succeeded",
       );
     }
 
@@ -143,20 +143,20 @@ test.describe("Session Management — Security Tests", { tag: "@session" }, () =
   });
 
   /**
-   * TC_025 — Protected Pages Inaccessible After Logout
+   * TC-025 — Protected Pages Inaccessible After Logout
    *
    * Verifies that each protected path is accessible while authenticated and then
    * becomes inaccessible after logout — accepting either:
    *   (a) an explicit redirect to /login, or
    *   (b) the login link becoming visible (user shown as unauthenticated on the page).
    */
-  test("[TC_025] — Protected pages are inaccessible after logout", async ({
+  test("[TC-025] — Protected pages are inaccessible after logout", async ({
     page,
     loginPage,
     logger,
     testUser,
   }, testInfo) => {
-    const report: string[] = ["=== TC_025: Protected Page Access Control ===", ""];
+    const report: string[] = ["=== TC-025: Protected Page Access Control ===", ""];
 
     // ── Step 1: Login ──────────────────────────────────────────────────────────
     await loginPage.login(testUser.email, testUser.password);
@@ -208,15 +208,15 @@ test.describe("Session Management — Security Tests", { tag: "@session" }, () =
   });
 
   /**
-   * TC_026 — Storage State Replay Observation After Logout
+   * TC-026 — Storage State Replay Observation After Logout
    *
    * Captures a full Playwright storageState snapshot (cookies + localStorage +
    * sessionStorage) before logout, then restores it in a new browser context
    * to document whether the server honours previously issued tokens.
    *
-   * Mirrors TC_024 but uses Playwright's storageState rather than raw cookies.
+   * Mirrors TC-024 but uses Playwright's storageState rather than raw cookies.
    */
-  test("[TC_026] — Storage state replay observation after logout", async ({
+  test("[TC-026] — Storage state replay observation after logout", async ({
     page,
     browser,
     loginPage,
@@ -267,7 +267,7 @@ test.describe("Session Management — Security Tests", { tag: "@session" }, () =
 
     await testInfo.attach("storage-replay-security-report", {
       body: [
-        "=== TC_026: Storage State Replay Observation ===",
+        "=== TC-026: Storage State Replay Observation ===",
         `Cookies in snapshot              : ${storageSnapshot.cookies.length}`,
         `Origins with localStorage        : ${storageSnapshot.origins.length}`,
         `URL after replay attempt         : ${replayUrl}`,
@@ -281,10 +281,10 @@ test.describe("Session Management — Security Tests", { tag: "@session" }, () =
     });
 
     if (sessionInvalidated) {
-      logger.info("TC_026 PASS: storage state replay correctly rejected by server");
+      logger.info("TC-026 PASS: storage state replay correctly rejected by server");
     } else {
       logger.warn(
-        "TC_026 SECURITY FINDING: storage state replay succeeded — server-side session not invalidated",
+        "TC-026 SECURITY FINDING: storage state replay succeeded — server-side session not invalidated",
       );
     }
 
@@ -298,21 +298,21 @@ test.describe("Session Management — Security Tests", { tag: "@session" }, () =
   });
 
   /**
-   * TC_027 — Multiple Simultaneous Sessions (Concurrent Context Isolation)
+   * TC-027 — Multiple Simultaneous Sessions (Concurrent Context Isolation)
    *
    * Opens two separate browser contexts logged in as the same user to verify:
    *  - Both sessions can be active simultaneously.
    *  - Logging out of Context A does not affect Context B (session isolation).
    *  - Context A cannot access protected pages after logout.
    */
-  test("[TC_027] — Multiple simultaneous sessions are isolated and independent", async ({
+  test("[TC-027] — Multiple simultaneous sessions are isolated and independent", async ({
     page,
     browser,
     loginPage,
     logger,
     testUser,
   }, testInfo) => {
-    const report: string[] = ["=== TC_027: Multi-Session Concurrent Login ===", ""];
+    const report: string[] = ["=== TC-027: Multi-Session Concurrent Login ===", ""];
 
     // ── Context A: default test page ────────────────────────────────────────────
     logger.info("Context A: logging in");
@@ -400,20 +400,20 @@ test.describe("Session Management — Security Tests", { tag: "@session" }, () =
   });
 
   /**
-   * TC_028 — Re-Authentication Restores Protected Page Access
+   * TC-028 — Re-Authentication Restores Protected Page Access
    *
    * Full auth lifecycle:
    *  1. Login  → protected page accessible.
    *  2. Logout → protected page access denied.
    *  3. Re-authenticate → protected page accessible again.
    */
-  test("[TC_028] — Re-authentication required and sufficient to restore protected access", async ({
+  test("[TC-028] — Re-authentication required and sufficient to restore protected access", async ({
     page,
     loginPage,
     logger,
     testUser,
   }, testInfo) => {
-    const report: string[] = ["=== TC_028: Re-Authentication Lifecycle ===", ""];
+    const report: string[] = ["=== TC-028: Re-Authentication Lifecycle ===", ""];
     const protectedPath = "/customer/info";
 
     // ── Phase 1: Authenticated access ──────────────────────────────────────────

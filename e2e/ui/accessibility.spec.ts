@@ -8,13 +8,13 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
   // ─── Full-page axe-core scans ──────────────────────────────────────────────
 
   /**
-   * TC_029 — Login page accessibility (unauthenticated)
+   * TC-029 — Login page accessibility (unauthenticated)
    *
    * Scans the login page with axe-core against WCAG 2.1 AA rules.
    * Critical and serious violations fail the test.
    * Moderate and minor violations are reported as warnings.
    */
-  test("[TC_029] — Login page has no critical or serious WCAG 2.1 AA violations", async ({
+  test("[TC-029] — Login page has no critical or serious WCAG 2.1 AA violations", async ({
     page,
     loginPage,
     a11yHelper,
@@ -57,11 +57,11 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
   });
 
   /**
-   * TC_030 — Home page accessibility (unauthenticated)
+   * TC-030 — Home page accessibility (unauthenticated)
    *
    * Scans the public home page for WCAG 2.1 AA compliance.
    */
-  test("[TC_030] — Home page has no critical or serious WCAG 2.1 AA violations", async ({
+  test("[TC-030] — Home page has no critical or serious WCAG 2.1 AA violations", async ({
     page,
     homePage,
     a11yHelper,
@@ -104,12 +104,12 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
   });
 
   /**
-   * TC_031 — Home page accessibility (authenticated)
+   * TC-031 — Home page accessibility (authenticated)
    *
    * Scans the home page after login so that dynamic content (account link,
    * logout button) rendered only for authenticated users is also checked.
    */
-  test("[TC_031] — Authenticated home page has no critical or serious WCAG 2.1 AA violations", async ({
+  test("[TC-031] — Authenticated home page has no critical or serious WCAG 2.1 AA violations", async ({
     page,
     loginPage,
     homePage,
@@ -159,12 +159,12 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
   // ─── Targeted keyboard & interaction tests ─────────────────────────────────
 
   /**
-   * TC_032 — Login form keyboard navigation
+   * TC-032 — Login form keyboard navigation
    *
    * Verifies that Tab moves focus through Email → Password → Login button
    * in the correct order and that no element in the form creates a keyboard trap.
    */
-  test("[TC_032] — Login form is fully navigable by keyboard in correct tab order", async ({
+  test("[TC-032] — Login form is fully navigable by keyboard in correct tab order", async ({
     page,
     loginPage,
     a11yHelper,
@@ -200,7 +200,7 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
     await testInfo.attach("keyboard-tab-order-report", {
       body: a11yHelper.formatKeyboardNavReport(
         { initialFocus, tabSequence, emailIndex, passwordIndex },
-        "TC_032: Login Form Keyboard Navigation",
+        "TC-032: Login Form Keyboard Navigation",
       ),
       contentType: "text/plain",
     });
@@ -226,13 +226,13 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
   });
 
   /**
-   * TC_033 — Login error message is accessible
+   * TC-033 — Login error message is accessible
    *
    * After submitting invalid credentials, the error message must be visible
    * and associated with the form (role="alert" or aria-live region) so
    * screen readers announce it automatically.
    */
-  test("[TC_033] — Login error message is announced to assistive technology", async ({
+  test("[TC-033] — Login error message is announced to assistive technology", async ({
     page,
     loginPage,
     a11yHelper,
@@ -281,7 +281,7 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
     await testInfo.attach("error-accessibility-report", {
       body: a11yHelper.formatAriaAnnouncementReport(
         { isErrorVisible, errorRole, isProperlyAnnounced },
-        "TC_033: Login Error Message Accessibility",
+        "TC-033: Login Error Message Accessibility",
       ),
       contentType: "text/plain",
     });
@@ -294,11 +294,11 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
 
     if (isProperlyAnnounced) {
       logger.info(
-        "TC_033 PASS: error message has proper ARIA announcement attributes",
+        "TC-033 PASS: error message has proper ARIA announcement attributes",
       );
     } else {
       logger.warn(
-        "TC_033 FINDING: error container missing role=alert / aria-live — screen readers will not announce it",
+        "TC-033 FINDING: error container missing role=alert / aria-live — screen readers will not announce it",
       );
     }
 
@@ -313,13 +313,13 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
   });
 
   /**
-   * TC_034 — Focus indicators are visible on interactive elements
+   * TC-034 — Focus indicators are visible on interactive elements
    *
    * Every focusable element in the login form must display a visible focus
    * outline when focused via keyboard. Invisible focus rings are a WCAG 2.4.11
    * failure (AA in WCAG 2.2).
    */
-  test("[TC_034] — Interactive elements display a visible focus indicator", async ({
+  test("[TC-034] — Interactive elements display a visible focus indicator", async ({
     page,
     loginPage,
     a11yHelper,
@@ -385,7 +385,7 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
     await testInfo.attach("focus-indicator-report", {
       body: a11yHelper.formatFocusIndicatorReport(
         results,
-        "TC_034: Focus Indicator Visibility",
+        "TC-034: Focus Indicator Visibility",
       ),
       contentType: "text/plain",
     });
@@ -405,12 +405,12 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
   });
 
   /**
-   * TC_035 — Images have descriptive alt text
+   * TC-035 — Images have descriptive alt text
    *
    * Every non-decorative image on the login and home pages must have a
    * non-empty alt attribute. Decorative images must use alt="".
    */
-  test("[TC_035] — All images have appropriate alt text", async ({
+  test("[TC-035] — All images have appropriate alt text", async ({
     page,
     loginPage,
     homePage,
@@ -447,7 +447,7 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
     }
 
     await testInfo.attach("image-alt-text-report", {
-      body: a11yHelper.formatImageAltReport(pageResults, "TC_035: Image Alt Text"),
+      body: a11yHelper.formatImageAltReport(pageResults, "TC-035: Image Alt Text"),
       contentType: "text/plain",
     });
 
@@ -468,12 +468,12 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
   });
 
   /**
-   * TC_036 — Heading hierarchy is logical
+   * TC-036 — Heading hierarchy is logical
    *
    * Headings must descend without skipped levels (h1 → h2 → h3) and there
    * must be exactly one h1 per page for screen reader landmark navigation.
    */
-  test("[TC_036] — Heading hierarchy is logical with no skipped levels", async ({
+  test("[TC-036] — Heading hierarchy is logical with no skipped levels", async ({
     page,
     loginPage,
     homePage,
@@ -533,7 +533,7 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
     await testInfo.attach("heading-hierarchy-report", {
       body: a11yHelper.formatHeadingHierarchyReport(
         pageResults,
-        "TC_036: Heading Hierarchy",
+        "TC-036: Heading Hierarchy",
       ),
       contentType: "text/plain",
     });
@@ -554,12 +554,12 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
   });
 
   /**
-   * TC_037 — Colour contrast passes WCAG AA
+   * TC-037 — Colour contrast passes WCAG AA
    *
    * Runs axe-core scoped to the colour-contrast rule only, so any contrast
    * failure is immediately surfaced as a distinct, focused test result.
    */
-  test("[TC_037] — Text colour contrast meets WCAG 2.1 AA requirements", async ({
+  test("[TC-037] — Text colour contrast meets WCAG 2.1 AA requirements", async ({
     page,
     loginPage,
     a11yHelper,
@@ -589,7 +589,7 @@ test.describe("Accessibility — WCAG 2.1 AA Tests", { tag: "@a11y" }, () => {
       body: a11yHelper.formatColourContrastReport(
         contrastViolations,
         contrastFailures,
-        "TC_037: Colour Contrast Compliance",
+        "TC-037: Colour Contrast Compliance",
       ),
       contentType: "text/plain",
     });

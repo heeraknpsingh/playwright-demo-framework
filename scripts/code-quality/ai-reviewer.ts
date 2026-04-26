@@ -67,7 +67,7 @@ Return a single JSON object with this exact shape:
       "file": "relative/path/to/file.ts",
       "line": <number, 0 if unknown>,
       "severity": "error",
-      "rule": "TC_001",
+      "rule": "TC-001",
       "message": "clear explanation of the violation"
     }
   ],

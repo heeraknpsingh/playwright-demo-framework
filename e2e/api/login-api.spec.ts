@@ -2,7 +2,7 @@ import { test, expect } from "../../fixtures/base.fixture";
 import { loginTestData } from "../../test-data/login.data";
 
 test.describe("Login — API Tests", { tag: '@api' }, () => {
-  test("[TC_001 — API login with valid credentials returns success", async ({
+  test("[TC-001] — API login with valid credentials returns success", async ({
     apiHelper,
     logger,
     testUser,
@@ -15,7 +15,7 @@ test.describe("Login — API Tests", { tag: '@api' }, () => {
     logger.info("API login returned non-error status — PASS");
   });
 
-  test("[TC_002] — API login with invalid password returns error", async ({
+  test("[TC-002] — API login with invalid password returns error", async ({
     apiHelper,
     logger,
   }) => {
@@ -38,7 +38,7 @@ test.describe("Login — API Tests", { tag: '@api' }, () => {
     logger.info("Invalid password login correctly rejected — PASS");
   });
 
-  test("[TC_003] — Access account page without auth redirects to login", async ({
+  test("[TC-003] — Access account page without auth redirects to login", async ({
     apiHelper,
     logger,
   }) => {
@@ -53,7 +53,7 @@ test.describe("Login — API Tests", { tag: '@api' }, () => {
     logger.info("Unauthenticated access correctly redirected — PASS");
   });
 
-  test("[TC_004] — API login with non-existent email returns error", async ({
+  test("[TC-004] — API login with non-existent email returns error", async ({
     apiHelper,
     logger,
   }) => {
