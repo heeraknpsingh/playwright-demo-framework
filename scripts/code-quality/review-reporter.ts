@@ -47,7 +47,12 @@ export function printReviewResult(result: ReviewResult): void {
   console.log(`${BOLD}${CYAN}  AI CODE REVIEW  ${DIM}(${result.model})${RESET}`);
   console.log(`${BOLD}${CYAN}${divider("═")}${RESET}`);
   if (result.tokensUsed) {
-    console.log(`${DIM}  Tokens used: ${result.tokensUsed}${RESET}\n`);
+    console.log(`${DIM}  Tokens used: ${result.tokensUsed}${RESET}`);
+  }
+
+  if (result.summary) {
+    console.log(`\n${BOLD}  SUMMARY${RESET}`);
+    console.log(`  ${result.summary}\n`);
   }
 
   if (result.issues.length > 0) {
@@ -70,8 +75,14 @@ export function printReviewResult(result: ReviewResult): void {
     console.log();
   }
 
-  if (result.issues.length === 0 && result.suggestions.length === 0) {
-    console.log(`${GREEN}  No issues found.${RESET}\n`);
+  if (result.comments.length > 0) {
+    console.log(`${CYAN}${BOLD}  REVIEW COMMENTS${RESET}`);
+    result.comments.forEach((c) => {
+      const loc = c.line > 0 ? `:${c.line}` : "";
+      console.log(`  ${CYAN}◆${RESET}  ${c.file}${loc}`);
+      console.log(`     ${c.comment}`);
+    });
+    console.log();
   }
 
   if (result.verdict === "pass") {

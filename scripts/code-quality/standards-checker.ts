@@ -187,7 +187,8 @@ function checkNoHardcodedCredentials(filePath: string, lines: string[]): Violati
     const isComment = line.trim().startsWith("//") || line.trim().startsWith("*");
     if (isComment) return;
 
-    if (emailPattern.test(line) && !line.includes("test-data") && !line.includes("login.data")) {
+    const isInvalidTestEmail = /["']invalid[^"']*@/.test(line);
+    if (emailPattern.test(line) && !isInvalidTestEmail && !line.includes("test-data") && !line.includes("login.data")) {
       violations.push(
         violation(
           filePath,
@@ -247,8 +248,8 @@ function checkEvidenceCapture(filePath: string, lines: string[]): Violation[] {
     const isTestTitle = /^\s*test\s*\(/.test(line) && triggerWords.test(line);
     if (!isTestTitle) return;
 
-    // Scan the next 40 lines for captureEvidence
-    const block = lines.slice(i, i + 40).join("\n");
+    // Scan the next 100 lines for captureEvidence (tests can be long)
+    const block = lines.slice(i, i + 100).join("\n");
     if (!block.includes("captureEvidence")) {
       violations.push(
         violation(
