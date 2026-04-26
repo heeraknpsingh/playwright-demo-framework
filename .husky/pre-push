@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+
+echo ""
+echo "╔══════════════════════════════════════════════════════════╗"
+echo "║               PRE-PUSH AI CODE REVIEW                   ║"
+echo "╚══════════════════════════════════════════════════════════╝"
+echo ""
+echo "  Reviewing full branch diff vs main before push..."
+echo ""
+
+npx ts-node scripts/code-quality/ai-reviewer.ts --push
+AI_EXIT=$?
+
+if [ $AI_EXIT -ne 0 ]; then
+  echo ""
+  echo "  ✗ AI review failed — fix issues above before pushing"
+  echo ""
+  exit 1
+fi
+
+echo ""
+echo "╔══════════════════════════════════════════════════════════╗"
+echo "║             ✓  PRE-PUSH CHECKS PASSED                   ║"
+echo "╚══════════════════════════════════════════════════════════╝"
+echo ""
