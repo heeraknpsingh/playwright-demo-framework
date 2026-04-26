@@ -23,20 +23,13 @@ test.describe("Login — UI Tests", { tag: "@ui" }, () => {
     expect(loggedInEmail.toLowerCase()).toContain(email.toLowerCase());
   });
 
-  test("[TC-006] — Invalid password shows error message", async ({
-    loginPage,
-    logger,
-  }) => {
+  test("[TC-006] — Invalid password shows error message", async ({ loginPage, logger }) => {
     const { email, password, description } = loginTestData.invalidPasswordUser;
     logger.info(`Test: ${description}`);
     await loginPage.login(email, password);
 
-    logger.warn(
-      "Authentication failed — invalid password — capturing evidence",
-    );
-    const screenshot = await loginPage.captureEvidence(
-      "tc006-invalid-password",
-    );
+    logger.warn("Authentication failed — invalid password — capturing evidence");
+    const screenshot = await loginPage.captureEvidence("tc006-invalid-password");
     await test.info().attach("auth-failure-screenshot", {
       body: screenshot,
       contentType: "image/png",
@@ -53,20 +46,13 @@ test.describe("Login — UI Tests", { tag: "@ui" }, () => {
     expect(errorText).not.toBeNull();
   });
 
-  test("[TC-007] — Unregistered email shows error message", async ({
-    loginPage,
-    logger,
-  }) => {
+  test("[TC-007] — Unregistered email shows error message", async ({ loginPage, logger }) => {
     const { email, password, description } = loginTestData.invalidEmailUser;
     logger.info(`Test: ${description}`);
     await loginPage.login(email, password);
 
-    logger.warn(
-      "Authentication failed — unregistered email — capturing evidence",
-    );
-    const screenshot = await loginPage.captureEvidence(
-      "tc007-unregistered-email",
-    );
+    logger.warn("Authentication failed — unregistered email — capturing evidence");
+    const screenshot = await loginPage.captureEvidence("tc007-unregistered-email");
     await test.info().attach("auth-failure-screenshot", {
       body: screenshot,
       contentType: "image/png",
@@ -82,20 +68,13 @@ test.describe("Login — UI Tests", { tag: "@ui" }, () => {
     expect(isError).toBeTruthy();
   });
 
-  test("[TC-008] — Empty credentials show validation errors", async ({
-    loginPage,
-    logger,
-  }) => {
+  test("[TC-008] — Empty credentials show validation errors", async ({ loginPage, logger }) => {
     const { description } = loginTestData.emptyCredentialsUser;
     logger.info(`Test: ${description}`);
     await loginPage.login("", "");
 
-    logger.warn(
-      "Authentication failed — empty credentials — capturing evidence",
-    );
-    const screenshot = await loginPage.captureEvidence(
-      "tc008-empty-credentials",
-    );
+    logger.warn("Authentication failed — empty credentials — capturing evidence");
+    const screenshot = await loginPage.captureEvidence("tc008-empty-credentials");
     await test.info().attach("auth-failure-screenshot", {
       body: screenshot,
       contentType: "image/png",
