@@ -91,7 +91,7 @@ test.describe("Login — UI Tests", { tag: "@ui" }, () => {
   });
 
   test(
-    "[TC-009] — Logout after successful login",
+    "[TC-009] — Logout after assert successful login",
     { tag: "@smoke" },
     async ({ loginPage, homePage, logger, testUser }) => {
       logger.info("Test: logout after login");

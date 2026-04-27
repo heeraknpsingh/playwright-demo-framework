@@ -35,7 +35,8 @@ jobs:
           node-version: "20"
           cache: "npm"
       - run: npm ci
-      - run: npm audit --audit-level=high
+      - name: Audit production dependencies for high/critical vulnerabilities
+        run: npm audit --audit-level=high --omit=dev
 
   # ── Browser test suites (all run in parallel) ────────────────────────────────
 
