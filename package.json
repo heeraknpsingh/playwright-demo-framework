@@ -12,6 +12,7 @@
     "test:session": "playwright test --grep @session",
     "test:a11y": "playwright test --grep @a11y",
     "test:performance": "playwright test --project=performance",
+    "test:smoke": "playwright test --grep @smoke",
     "test:debug": "playwright test --debug",
     "report": "playwright show-report reports/html",
     "lint": "tsc --noEmit",

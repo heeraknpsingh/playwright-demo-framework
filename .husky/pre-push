@@ -2,15 +2,40 @@
 
 echo ""
 echo "╔══════════════════════════════════════════════════════════╗"
-echo "║               PRE-PUSH AI CODE REVIEW                   ║"
+echo "║               PRE-PUSH QUALITY CHECKS                   ║"
 echo "╚══════════════════════════════════════════════════════════╝"
-echo ""
-echo "  Reviewing full branch diff vs main before push..."
-echo ""
 
+# ── Step 1: TypeScript type check (full project) ─────────────────────────────
+echo ""
+echo "  [1/3] Running TypeScript type check..."
+npx tsc --noEmit
+TSC_EXIT=$?
+if [ $TSC_EXIT -ne 0 ]; then
+  echo ""
+  echo "  ✗ TypeScript errors found — fix type errors above before pushing"
+  echo ""
+  exit 1
+fi
+echo "  ✓ TypeScript type check passed"
+
+# ── Step 2: Smoke test suite ─────────────────────────────────────────────────
+echo ""
+echo "  [2/3] Running smoke tests..."
+npm run test:smoke
+SMOKE_EXIT=$?
+if [ $SMOKE_EXIT -ne 0 ]; then
+  echo ""
+  echo "  ✗ Smoke tests failed — fix failing tests above before pushing"
+  echo ""
+  exit 1
+fi
+echo "  ✓ Smoke tests passed"
+
+# ── Step 3: AI code review (full branch diff vs main) ────────────────────────
+echo ""
+echo "  [3/3] Running AI code review on full branch diff..."
 npx ts-node scripts/code-quality/ai-reviewer.ts --push
 AI_EXIT=$?
-
 if [ $AI_EXIT -ne 0 ]; then
   echo ""
   echo "  ✗ AI review failed — fix issues above before pushing"
@@ -20,6 +45,6 @@ fi
 
 echo ""
 echo "╔══════════════════════════════════════════════════════════╗"
-echo "║             ✓  PRE-PUSH CHECKS PASSED                   ║"
+echo "║             ✓  ALL PRE-PUSH CHECKS PASSED               ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""

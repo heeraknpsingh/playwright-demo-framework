@@ -90,24 +90,23 @@ test.describe("Login — UI Tests", { tag: "@ui" }, () => {
     expect(isError).toBeTruthy();
   });
 
-  test("[TC-009] — Logout after successful login", async ({
-    loginPage,
-    homePage,
-    logger,
-    testUser,
-  }) => {
-    logger.info("Test: logout after login");
-    const { email, password } = testUser;
-    await loginPage.login(email, password);
-    const isLoggedIn = await loginPage.isLoggedIn();
-    expect(isLoggedIn).toBeTruthy();
-    logger.info("Login verified — proceeding to logout");
-    await loginPage.logout();
-    logger.info("Asserting user is redirected to home after logout");
-    const url = await loginPage.getCurrentUrl();
-    logger.info(`URL after logout: ${url}`);
-    const isLoginVisible = await homePage.isLoginLinkVisible();
-    expect(isLoginVisible).toBeTruthy();
-    logger.info("Login link visible — user is logged out");
-  });
+  test(
+    "[TC-009] — Logout after successful login",
+    { tag: "@smoke" },
+    async ({ loginPage, homePage, logger, testUser }) => {
+      logger.info("Test: logout after login");
+      const { email, password } = testUser;
+      await loginPage.login(email, password);
+      const isLoggedIn = await loginPage.isLoggedIn();
+      expect(isLoggedIn).toBeTruthy();
+      logger.info("Login verified — proceeding to logout");
+      await loginPage.logout();
+      logger.info("Asserting user is redirected to home after logout");
+      const url = await loginPage.getCurrentUrl();
+      logger.info(`URL after logout: ${url}`);
+      const isLoginVisible = await homePage.isLoginLinkVisible();
+      expect(isLoginVisible).toBeTruthy();
+      logger.info("Login link visible — user is logged out");
+    },
+  );
 });

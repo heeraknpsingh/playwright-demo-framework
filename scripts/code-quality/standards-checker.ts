@@ -154,7 +154,7 @@ function checkPageObjectContract(filePath: string, lines: string[]): Violation[]
 
 function checkTestTags(filePath: string, lines: string[]): Violation[] {
   const violations: Violation[] = [];
-  const allowedTags = ["@ui", "@api", "@security", "@xss", "@session", "@a11y", "@performance"];
+  const allowedTags = ["@ui", "@api", "@security", "@xss", "@session", "@a11y", "@performance", "@smoke"];
 
   lines.forEach((line, i) => {
     if (/test\.describe\s*\(/.test(line)) {
