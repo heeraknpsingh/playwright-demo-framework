@@ -240,6 +240,93 @@ function checkNoHardcodedUrls(filePath: string, lines: string[]): Violation[] {
   return violations;
 }
 
+function checkNoDirectLocatorsInSpec(filePath: string, lines: string[]): Violation[] {
+  const violations: Violation[] = [];
+  // Matches page.locator( or page.getByRole( / getByText( / getByLabel( / getByPlaceholder( / getByTestId( / getByAltText( / getByTitle(
+  const locatorPattern = /\bpage\s*\.\s*(locator|getByRole|getByText|getByLabel|getByPlaceholder|getByTestId|getByAltText|getByTitle)\s*\(/;
+
+  lines.forEach((line, i) => {
+    const isComment = line.trim().startsWith("//") || line.trim().startsWith("*");
+    if (!isComment && locatorPattern.test(line)) {
+      violations.push(
+        violation(
+          filePath,
+          i + 1,
+          "TC-009",
+          `Locators must be defined in page objects — replace page.locator()/page.getBy*() with a POM method`,
+          "error",
+        ),
+      );
+    }
+  });
+  return violations;
+}
+
+function checkNoDirectPageActionsInSpec(filePath: string, lines: string[]): Violation[] {
+  const violations: Violation[] = [];
+  const actionPattern =
+    /\bpage\s*\.\s*(click|fill|type|press|check|uncheck|selectOption|hover|dblclick|tap|dragAndDrop|focus|clear|dispatchEvent)\s*\(/;
+
+  lines.forEach((line, i) => {
+    const isComment = line.trim().startsWith("//") || line.trim().startsWith("*");
+    if (!isComment && actionPattern.test(line)) {
+      violations.push(
+        violation(
+          filePath,
+          i + 1,
+          "TC-010",
+          `Page interactions must live in page object action methods — avoid page.click()/page.fill()/etc. directly in spec files`,
+          "error",
+        ),
+      );
+    }
+  });
+  return violations;
+}
+
+function checkNoDirectNavigationInSpec(filePath: string, lines: string[]): Violation[] {
+  const violations: Violation[] = [];
+  const gotoPattern = /\bpage\s*\.\s*goto\s*\(/;
+
+  lines.forEach((line, i) => {
+    const isComment = line.trim().startsWith("//") || line.trim().startsWith("*");
+    if (!isComment && gotoPattern.test(line)) {
+      violations.push(
+        violation(
+          filePath,
+          i + 1,
+          "TC-011",
+          `Navigation must go through page object methods — use navigateTo*() instead of page.goto() in spec files`,
+          "warning",
+        ),
+      );
+    }
+  });
+  return violations;
+}
+
+function checkNoRawRequestInSpec(filePath: string, lines: string[]): Violation[] {
+  const violations: Violation[] = [];
+  // Flag direct use of Playwright request context — should use apiHelper fixture instead
+  const requestPattern = /\brequest\s*\.\s*(get|post|put|patch|delete|fetch)\s*\(/;
+
+  lines.forEach((line, i) => {
+    const isComment = line.trim().startsWith("//") || line.trim().startsWith("*");
+    if (!isComment && requestPattern.test(line)) {
+      violations.push(
+        violation(
+          filePath,
+          i + 1,
+          "TC-012",
+          `API calls must use the apiHelper fixture — avoid using the raw request context directly in spec files`,
+          "warning",
+        ),
+      );
+    }
+  });
+  return violations;
+}
+
 function checkEvidenceCapture(filePath: string, lines: string[]): Violation[] {
   const violations: Violation[] = [];
   const triggerWords = /\b(invalid|error|fail|wrong|incorrect)\b/i;
@@ -282,6 +369,10 @@ function checkFile(filePath: string): Violation[] {
     violations.push(...checkTestTags(filePath, lines));
     violations.push(...checkNoHardcodedCredentials(filePath, lines));
     violations.push(...checkEvidenceCapture(filePath, lines));
+    violations.push(...checkNoDirectLocatorsInSpec(filePath, lines));
+    violations.push(...checkNoDirectPageActionsInSpec(filePath, lines));
+    violations.push(...checkNoDirectNavigationInSpec(filePath, lines));
+    violations.push(...checkNoRawRequestInSpec(filePath, lines));
   }
 
   if (isPageObject) {
