@@ -21,7 +21,7 @@ echo "  ✓ TypeScript type check passed"
 # ── Step 2: Smoke test suite ─────────────────────────────────────────────────
 echo ""
 echo "  [2/3] Running smoke tests..."
-npm run test:smoke
+npx playwright test --grep @smoke --reporter=list
 SMOKE_EXIT=$?
 if [ $SMOKE_EXIT -ne 0 ]; then
   echo ""
