@@ -12,7 +12,7 @@ const DEMO_APP_URL = process.env.DEMO_APP_URL || "http://localhost:3001";
  *   - App running:     cd demo-app && npm install && node server.js
  *   - .env vars set:   DEMO_APP_URL, DEMO_DB_HOST, DEMO_DB_USER, DEMO_DB_PASSWORD, DEMO_DB_NAME
  */
-test.describe("Role-based login from DB", { tag: "@ui" }, () => {
+test.describe("Role-based login from DB", { tag: ["@ui", "@role-based"] }, () => {
   test("[TC-020] — each DB user can log in and sees their role-specific dashboard", async ({
     page,
     logger,
