@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo App – Login</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f3f4f6;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #111827;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.08);
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    h1 { font-size: 1.5rem; margin-bottom: 1.5rem; }
+    h2 { font-size: 1.25rem; margin-bottom: .5rem; }
+    h3 { font-size: 1rem; margin: 1.25rem 0 .5rem; color: #374151; }
+
+    label { display: block; font-size: .875rem; margin-bottom: .25rem; color: #374151; }
+
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: .625rem .75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      outline: none;
+      transition: border-color .15s;
+    }
+    input:focus { border-color: #6366f1; }
+
+    button {
+      width: 100%;
+      padding: .625rem;
+      background: #6366f1;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    button:hover { background: #4f46e5; }
+    button.secondary {
+      background: #e5e7eb;
+      color: #374151;
+      margin-top: .75rem;
+    }
+    button.secondary:hover { background: #d1d5db; }
+
+    #error-msg {
+      color: #dc2626;
+      font-size: .875rem;
+      min-height: 1.25rem;
+      margin-bottom: .5rem;
+    }
+
+    .role-badge {
+      display: inline-block;
+      padding: .2rem .65rem;
+      border-radius: 999px;
+      font-size: .75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-left: .5rem;
+    }
+    .role-badge.admin   { background: #fef3c7; color: #92400e; }
+    .role-badge.manager { background: #dbeafe; color: #1e40af; }
+    .role-badge.user    { background: #d1fae5; color: #065f46; }
+
+    nav { display: flex; flex-direction: column; gap: .35rem; margin-top: .35rem; }
+    nav a {
+      color: #6366f1;
+      text-decoration: none;
+      font-size: .9rem;
+      padding: .25rem 0;
+    }
+    nav a:hover { text-decoration: underline; }
+
+    [data-role-section] {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: .75rem;
+    }
+
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <!-- ── Login ─────────────────────────────────────── -->
+  <div class="card">
+    <section id="login-section">
+      <h1>Sign in</h1>
+      <form id="login-form" novalidate>
+        <label for="username">Username</label>
+        <input id="username" type="text" autocomplete="username" placeholder="you@demo.local" />
+
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password" />
+
+        <p id="error-msg" role="alert"></p>
+        <button type="submit">Log in</button>
+      </form>
+    </section>
+
+    <!-- ── Dashboard ──────────────────────────────────── -->
+    <section id="dashboard-section" hidden>
+      <h2 id="welcome-msg"></h2>
+      <span id="role-badge" class="role-badge"></span>
+
+      <!-- Admin only -->
+      <div data-role-section="admin" hidden>
+        <h3>Admin Panel</h3>
+        <nav>
+          <a href="#" data-nav="manage-users">Manage Users</a>
+          <a href="#" data-nav="system-settings">System Settings</a>
+          <a href="#" data-nav="audit-logs">Audit Logs</a>
+        </nav>
+      </div>
+
+      <!-- Manager only -->
+      <div data-role-section="manager" hidden>
+        <h3>Manager Dashboard</h3>
+        <nav>
+          <a href="#" data-nav="team-reports">Team Reports</a>
+          <a href="#" data-nav="approve-requests">Approve Requests</a>
+          <a href="#" data-nav="team-members">Team Members</a>
+        </nav>
+      </div>
+
+      <!-- User only -->
+      <div data-role-section="user" hidden>
+        <h3>My Workspace</h3>
+        <nav>
+          <a href="#" data-nav="my-profile">My Profile</a>
+          <a href="#" data-nav="my-orders">My Orders</a>
+          <a href="#" data-nav="my-settings">My Settings</a>
+        </nav>
+      </div>
+
+      <button class="secondary" id="logout-btn">Logout</button>
+    </section>
+  </div>
+
+  <script>
+    const loginSection    = document.getElementById('login-section');
+    const dashboardSection = document.getElementById('dashboard-section');
+    const loginForm       = document.getElementById('login-form');
+    const errorMsg        = document.getElementById('error-msg');
+    const welcomeMsg      = document.getElementById('welcome-msg');
+    const roleBadge       = document.getElementById('role-badge');
+    const logoutBtn       = document.getElementById('logout-btn');
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorMsg.textContent = '';
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        const res  = await fetch('/api/login', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ username, password }),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          showDashboard(data.user);
+        } else {
+          errorMsg.textContent = data.message || 'Login failed';
+        }
+      } catch {
+        errorMsg.textContent = 'Could not reach server';
+      }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      dashboardSection.hidden = true;
+      loginSection.hidden     = false;
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+      errorMsg.textContent = '';
+    });
+
+    function showDashboard(user) {
+      loginSection.hidden     = true;
+      dashboardSection.hidden = false;
+
+      welcomeMsg.textContent  = `Welcome, ${user.displayName}`;
+      roleBadge.textContent   = user.role;
+      roleBadge.className     = `role-badge ${user.role}`;
+
+      document.querySelectorAll('[data-role-section]').forEach((el) => {
+        el.hidden = el.dataset.roleSection !== user.role;
+      });
+    }
+  </script>
+</body>
+</html>
