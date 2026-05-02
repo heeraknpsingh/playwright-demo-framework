@@ -10,6 +10,7 @@ A production-grade UI + API automation framework for [demowebshop.tricentis.com]
 - [Project Structure](#project-structure)
 - [OOP Concepts](#oop-concepts)
 - [Setup](#setup)
+- [Demo App — DB & UI Setup](#demo-app--db--ui-setup)
 - [Configuration](#configuration)
 - [Running Tests](#running-tests)
 - [Test Coverage](#test-coverage)
@@ -38,6 +39,10 @@ A production-grade UI + API automation framework for [demowebshop.tricentis.com]
 | [Prettier](https://prettier.io) | Opinionated code formatting |
 | [Husky](https://typicode.github.io/husky) + [lint-staged](https://github.com/okonet/lint-staged) | Git hooks — pre-commit and pre-push quality gates |
 | [Claude](https://claude.ai) (`claude-sonnet-4-6`) | AI-powered code review on every commit and push |
+| [MySQL 8](https://dev.mysql.com) | Database for the role-based demo app |
+| [Express](https://expressjs.com) | Lightweight backend for the role-based demo app |
+| [mysql2](https://github.com/sidorares/node-mysql2) | MySQL client used by Playwright tests to query the DB directly at test runtime |
+| [Docker](https://www.docker.com) | Runs the MySQL container locally via `docker compose` |
 
 ---
 
@@ -52,22 +57,35 @@ playwright-demo-framework/
 ├── playwright.config.ts               # Playwright configuration
 ├── tsconfig.json
 │
+├── demo-app/                          # Lightweight role-based demo application
+│   ├── server.js                      # Express API + static file server
+│   ├── init.sql                       # MySQL schema + seed users (admin / manager / user)
+│   ├── docker-compose.yml             # MySQL 8 container definition
+│   ├── Dockerfile                     # Node 20 Alpine image for the app
+│   ├── package.json                   # demo-app dependencies (express, mysql2, cors)
+│   ├── .env.example                   # DB connection defaults for the demo app
+│   └── public/
+│       └── index.html                 # Single-page login + role-based dashboard UI
+│
 ├── e2e/                               # Test specs
 │   ├── ui/
-│   │   ├── login.spec.ts              # Login UI tests           (TC-005–TC-009)
-│   │   ├── defensive-security.spec.ts # Security detection tests (TC-010–TC-014)
-│   │   ├── xss-input-validation.spec.ts # XSS / input tests     (TC-015–TC-023)
-│   │   ├── session-management.spec.ts # Session security tests   (TC-024–TC-028)
-│   │   ├── accessibility.spec.ts      # WCAG 2.1 AA a11y tests  (TC-029–TC-037)
-│   │   └── performance.spec.ts        # Lighthouse perf audits  (TC-PERF_001–004)
+│   │   ├── login.spec.ts              # Login UI tests                (TC-005–TC-009)
+│   │   ├── role-based-login.spec.ts   # DB-driven role-based login    (TC-020–TC-021)
+│   │   ├── defensive-security.spec.ts # Security detection tests      (TC-010–TC-014)
+│   │   ├── xss-input-validation.spec.ts # XSS / input tests           (TC-015–TC-023)
+│   │   ├── session-management.spec.ts # Session security tests        (TC-024–TC-028)
+│   │   ├── accessibility.spec.ts      # WCAG 2.1 AA a11y tests        (TC-029–TC-037)
+│   │   └── performance.spec.ts        # Lighthouse perf audits        (TC-PERF_001–004)
 │   └── api/
-│       └── login-api.spec.ts          # Login API tests          (TC-001–TC-004)
+│       └── login-api.spec.ts          # Login API tests               (TC-001–TC-004)
 │
 ├── page-objects/                      # Page Object Model classes
 │   ├── base/
 │   │   └── BasePage.ts                # Abstract base class
 │   ├── LoginPage.ts
-│   └── HomePage.ts
+│   ├── HomePage.ts
+│   ├── DemoAppLoginPage.ts            # Login page for the demo app
+│   └── DemoAppDashboardPage.ts        # Role-specific dashboard assertions
 │
 ├── fixtures/                          # Custom Playwright fixtures
 │   ├── base.fixture.ts                # Main merged fixture (used in all tests)
@@ -85,10 +103,12 @@ playwright-demo-framework/
 ├── utils/                             # Framework utilities
 │   ├── logger.ts                      # Winston logger (file + console)
 │   ├── env.loader.ts                  # .env loader & validator
+│   ├── db.utils.ts                    # MySQL connection + getUsersFromDb() / getUsersByRole()
 │   └── date.utils.ts                  # Date/timestamp helpers
 │
 ├── test-data/                         # Test data
 │   ├── login.data.ts                  # Typed login test data
+│   ├── demo-app.data.ts               # Invalid-credential fixture for TC-021
 │   ├── xss-payloads.data.ts           # 40+ categorised XSS payloads
 │   ├── performance.data.ts            # Lighthouse budget thresholds and page configs
 │   └── users.json                     # Static config
@@ -149,11 +169,105 @@ cp .env.example .env
 
 ---
 
+## Demo App — DB & UI Setup
+
+The `demo-app/` directory contains a self-contained Express + MySQL application used by the role-based login tests (`TC-020`, `TC-021`). It seeds three users — `admin`, `manager`, and `user` — and serves a single-page dashboard that shows different navigation sections depending on who is logged in.
+
+### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) running (for MySQL)
+- Node.js 18+ (for the Express server)
+
+### Step 1 — Start MySQL
+
+```bash
+cd demo-app
+docker compose up mysql -d
+```
+
+MySQL 8 starts in the background. On first boot it initialises the database and runs `init.sql`, which creates the `users` table and inserts the three seed accounts. Wait ~20 seconds for the container to be healthy before proceeding.
+
+Verify it is ready:
+
+```bash
+docker compose ps
+# demo-mysql should show "Up" and "healthy"
+```
+
+> **If the container crashes with "No space left on device"**, Docker's VM disk is full. Run `docker system prune -f` to reclaim space, then retry.
+
+### Step 2 — Install demo-app dependencies
+
+```bash
+# still inside demo-app/
+npm install
+```
+
+### Step 3 — Start the Express server
+
+```bash
+node server.js
+# Demo app running at http://localhost:3001
+```
+
+The server reads DB connection details from environment variables with sensible defaults that match the Docker Compose credentials:
+
+| Variable | Default | Description |
+|---|---|---|
+| `DB_HOST` | `localhost` | MySQL host |
+| `DB_PORT` | `3306` | MySQL port |
+| `DB_USER` | `demo_user` | DB user created by `init.sql` |
+| `DB_PASSWORD` | `demo_password` | DB password |
+| `DB_NAME` | `demo_app` | Database name |
+| `PORT` | `3001` | Port the Express server listens on |
+
+To override, copy `.env.example` to `.env` inside `demo-app/` and edit the values.
+
+### Step 4 — Open the UI (optional)
+
+Navigate to **http://localhost:3001** in your browser to interact with the app manually.
+
+**Seed accounts:**
+
+| Username | Password | Role | What the dashboard shows |
+|---|---|---|---|
+| `admin@demo.local` | `Admin123!` | admin | Admin Panel — Manage Users, System Settings, Audit Logs |
+| `manager@demo.local` | `Manager123!` | manager | Manager Dashboard — Team Reports, Approve Requests, Team Members |
+| `user@demo.local` | `User123!` | user | My Workspace — My Profile, My Orders, My Settings |
+
+### Step 5 — Configure Playwright env vars
+
+Add the following to your root `.env` (the framework's `.env`, not `demo-app/.env`):
+
+```env
+DEMO_APP_URL=http://localhost:3001
+DEMO_DB_HOST=localhost
+DEMO_DB_PORT=3306
+DEMO_DB_USER=demo_user
+DEMO_DB_PASSWORD=demo_password
+DEMO_DB_NAME=demo_app
+```
+
+These are already present in `.env.example` — copy them across if you haven't already.
+
+### Stopping the demo app
+
+```bash
+# Stop MySQL (keep data)
+cd demo-app && docker compose stop mysql
+
+# Stop MySQL and remove the volume (fresh start next time)
+cd demo-app && docker compose down -v
+```
+
+---
+
 ## Configuration
 
 All sensitive config lives in `.env` (never committed to version control):
 
 ```env
+# demowebshop target
 BASE_URL=https://demowebshop.tricentis.com
 USER_EMAIL=your@email.com
 USER_PASSWORD=YourPassword123@
@@ -161,7 +275,17 @@ HEADLESS=true
 LOG_LEVEL=debug
 SLOW_MO=0
 ANTHROPIC_API_KEY=your-anthropic-api-key   # optional — see Code Quality section
+
+# Demo app (role-based login tests)
+DEMO_APP_URL=http://localhost:3001
+DEMO_DB_HOST=localhost
+DEMO_DB_PORT=3306
+DEMO_DB_USER=demo_user
+DEMO_DB_PASSWORD=demo_password
+DEMO_DB_NAME=demo_app
 ```
+
+**demowebshop variables**
 
 | Variable | Description | Default |
 |---|---|---|
@@ -173,6 +297,17 @@ ANTHROPIC_API_KEY=your-anthropic-api-key   # optional — see Code Quality secti
 | `SLOW_MO` | Milliseconds to slow down each browser action (useful for debugging) | `0` |
 | `ANTHROPIC_API_KEY` | Anthropic API key for AI code review — if omitted and Claude Code CLI is installed, the CLI session is used instead | — |
 
+**Demo app variables** (required for `@role-based` tests only)
+
+| Variable | Description | Default |
+|---|---|---|
+| `DEMO_APP_URL` | Base URL of the running demo app | `http://localhost:3001` |
+| `DEMO_DB_HOST` | MySQL host reachable from the Playwright process | `localhost` |
+| `DEMO_DB_PORT` | MySQL port | `3306` |
+| `DEMO_DB_USER` | MySQL user | `demo_user` |
+| `DEMO_DB_PASSWORD` | MySQL password | `demo_password` |
+| `DEMO_DB_NAME` | MySQL database name | `demo_app` |
+
 ---
 
 ## Running Tests
@@ -182,13 +317,16 @@ ANTHROPIC_API_KEY=your-anthropic-api-key   # optional — see Code Quality secti
 npm test
 
 # Run by tag
-npm run test:ui        # @ui       — Login UI tests
-npm run test:api       # @api      — Login API tests
-npm run test:security  # @security — Defensive security detection
-npm run test:xss       # @xss      — XSS input validation
-npm run test:session   # @session  — Session management
-npm run test:a11y        # @a11y        — Accessibility (WCAG 2.1 AA)
+npm run test:ui        # @ui         — Login UI + role-based login tests
+npm run test:api       # @api        — Login API tests
+npm run test:security  # @security   — Defensive security detection
+npm run test:xss       # @xss        — XSS input validation
+npm run test:session   # @session    — Session management
+npm run test:a11y      # @a11y       — Accessibility (WCAG 2.1 AA)
 npm run test:performance # @performance — Lighthouse client-side performance audits
+
+# Role-based login tests (requires demo app + MySQL running — see Demo App Setup)
+npx playwright test --grep @role-based
 
 # Run everything (all tags, all projects) in a single Playwright process
 npm run test:all
@@ -200,10 +338,10 @@ npm run test:headed
 npm run test:debug
 
 # Run a specific file
-npx playwright test e2e/ui/session-management.spec.ts
+npx playwright test e2e/ui/role-based-login.spec.ts
 
 # Run a specific test case by ID
-npx playwright test --grep "TC-024"
+npx playwright test --grep "TC-020"
 
 # View the HTML report after a run
 npm run report
@@ -212,6 +350,30 @@ npm run report
 ---
 
 ## Test Coverage
+
+### Role-Based Login from DB — `@role-based` (TC-020–TC-021)
+
+These tests run against the **local demo app** (see [Demo App — DB & UI Setup](#demo-app--db--ui-setup)). They require MySQL and the Express server to be running before execution.
+
+**How they work:**
+
+1. `utils/db.utils.ts` opens a direct MySQL connection using the `DEMO_DB_*` env vars
+2. `getUsersFromDb()` executes `SELECT * FROM users ORDER BY role` and returns typed `DbUser[]`
+3. The test loops over each DB row, logs in via `DemoAppLoginPage`, and asserts the dashboard via `DemoAppDashboardPage`
+4. After each user, the test logs out and the loop continues with the next
+
+| ID | Test | What is asserted |
+|---|---|---|
+| TC-020 | Each DB user logs in and sees their role-specific dashboard | For each user: login succeeds, welcome message contains `display_name`, role badge matches `role`, only the matching `[data-role-section]` is visible, all other sections are hidden, logout returns to the login form |
+| TC-021 | Invalid credentials show an error message | Login with a non-existent user returns an error message; evidence screenshot is captured and attached to the report |
+
+**Role → UI mapping:**
+
+| Role | Section heading | Navigation links |
+|---|---|---|
+| `admin` | Admin Panel | Manage Users · System Settings · Audit Logs |
+| `manager` | Manager Dashboard | Team Reports · Approve Requests · Team Members |
+| `user` | My Workspace | My Profile · My Orders · My Settings |
 
 ### API Tests — `@api` (TC-001–TC-004)
 

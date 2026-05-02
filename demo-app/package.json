@@ -1,0 +1,15 @@
+{
+  "name": "demo-app",
+  "version": "1.0.0",
+  "description": "Lightweight demo app for role-based login Playwright testing",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.0",
+    "express": "^4.18.2",
+    "mysql2": "^3.6.0"
+  }
+}

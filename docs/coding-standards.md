@@ -100,7 +100,7 @@ export class AccountPage {
 
 Every `test.describe()` block must declare at least one tag.
 
-**Allowed tags:** `@ui`, `@api`, `@security`, `@xss`, `@session`, `@a11y`, `@performance`
+**Allowed tags:** `@ui`, `@api`, `@security`, `@xss`, `@session`, `@a11y`, `@performance`, `@smoke`, `@role-based`
 
 **Why:** Tags are used by CI to run targeted test subsets (`npm run test:ui`, `npm run test:a11y`, etc.). Untagged tests are excluded from all CI runs and will never execute in the pipeline.
 
