@@ -248,3 +248,5 @@ export const criticalPayloads: IXssPayload[] = [
   eventHandlerPayloads[2], // EH-003 javascript: URI
   specialCharPayloads[1], // SC-002 SQL injection
 ];
+
+export const XSS_DUMMY_EMAIL = "test@example.com";
