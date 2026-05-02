@@ -24,7 +24,7 @@ export default defineConfig({
     headless: process.env.HEADLESS !== "false",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
-    trace: "retain-on-failure",
+    trace: "on",
     viewport: { width: 1280, height: 720 },
     actionTimeout: 30_000,
     navigationTimeout: 30_000,
@@ -45,11 +45,7 @@ export default defineConfig({
         ...devices["Desktop Chrome"],
         viewport: { width: 1280, height: 720 },
         launchOptions: {
-          args: [
-            "--remote-debugging-port=9222",
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-          ],
+          args: ["--remote-debugging-port=9222", "--no-sandbox", "--disable-setuid-sandbox"],
         },
       },
     },
